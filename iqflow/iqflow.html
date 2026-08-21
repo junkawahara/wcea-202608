@@ -120,6 +120,8 @@
   }
   .seg {
     display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 4px;
     padding: 4px;
     border-radius: 999px;
@@ -457,7 +459,7 @@
       <summary>あそびかた(はじめての人へ)</summary>
       <p>SmartGames のパズル「IQ Flow」の練習ページです。中央の 5×5 を 8 個のピースでぴったり埋めます。ただしピースは上から置けず、<strong>盤の縁の開いているみぞ(光っているマス)からスライドさせて入れる</strong>ことしかできません。しかも各ピースは、しま模様(波)の向きにしか動けません。</p>
       <p><strong>操作</strong>: ①手元のピースをタップ → 入れられる口が光るので、そこをタップして挿入。②盤の上のピースをタップ → 矢印ボタン(またはキーボードの矢印キー)で 1 マスずつ動かす。開いている口からなら、いったん外周にはみ出したり、盤の外へ出したりもできます。</p>
-      <p><strong>手数</strong>: 同じピースを続けて動かしている間は 1 手と数えます。ピースを持ちかえると次の 1 手です。最短手数でのクリアを目指そう。「やさしい」は挿入する順番だけのパズル、「ふつう」「むずかしい」は途中でピースをよけたり出し入れしたりする必要があります。</p>
+      <p><strong>手数</strong>: 同じピースを続けて動かしている間は 1 手と数えます。ピースを持ちかえると次の 1 手です。最短手数でのクリアを目指そう。「やさしい」は挿入する順番だけのパズル、「ふつう」「むずかしい」は途中でピースをよけたり出し入れしたりする必要があります。「げきむず」は、実現できる全 211 配置の中で最短手数がいちばん長い(12 手)2 問だけの、この盤で最もむずかしい問題です。</p>
       <p>※ 実物では正解と違う場所にも挿入できますが、このドリルでは考えやすいように、各ピースは完成図の行(または列)にだけ挿入できるようにしています。</p>
     </details>
   </header>
@@ -467,6 +469,7 @@
       <button data-level="easy" aria-pressed="true">やさしい</button>
       <button data-level="normal" aria-pressed="false">ふつう</button>
       <button data-level="hard" aria-pressed="false">むずかしい</button>
+      <button data-level="extreme" aria-pressed="false">げきむず</button>
     </div>
     <button id="newBtn" class="btn ghost">新しい問題</button>
   </section>
@@ -757,7 +760,9 @@ const CHALLENGES = [{"g":"AABBDHHHDDFHGGEFGGEEFFCCC","n":8},{"g":"AABBHDDEHHDEEG
   const LEVELS = {
     easy: { label: 'やさしい', filter: (c) => c.n === 8 },
     normal: { label: 'ふつう', filter: (c) => c.n >= 9 && c.n <= 10 },
-    hard: { label: 'むずかしい', filter: (c) => c.n >= 11 },
+    hard: { label: 'むずかしい', filter: (c) => c.n === 11 },
+    // 実現可能な全 211 配置のうち最短手数が最大 (12 手) の 2 問だけ
+    extreme: { label: 'げきむず', filter: (c) => c.n >= 12 },
   };
 
   // 波模様タイル (SVG data URI)。axis 方向に流れる波線。
