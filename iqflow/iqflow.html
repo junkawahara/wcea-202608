@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>IQ Flow ドリル</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #E9EFEA;
+    --card: #F8FBF7;
+    --grid: rgba(22, 120, 138, .09);
+    --ink: #223239;
+    --ink-soft: #5F7680;
+    --accent: #16788A;
+    --accent-ink: #FFFFFF;
+    --red: #D6493A;
+    --ring: rgba(22, 120, 138, .4);
+    --shadow: 0 2px 14px rgba(24, 48, 56, .10);
+    /* 盤(トレイ)は実物どおり常に黒系。テーマで変えない */
+    --tray: #262B33;
+    --tray-wall: #14171C;
+    --tray-ring: #1D2128;
+    --tray-groove: rgba(255, 255, 255, .07);
+    --open-glow: #6FD6E8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #101619;
+      --card: #172226;
+      --grid: rgba(111, 196, 214, .07);
+      --ink: #E2EDF0;
+      --ink-soft: #8FA8B0;
+      --accent: #6FC4D6;
+      --accent-ink: #06262E;
+      --red: #E97862;
+      --ring: rgba(111, 196, 214, .45);
+      --shadow: 0 2px 14px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #101619;
+    --card: #172226;
+    --grid: rgba(111, 196, 214, .07);
+    --ink: #E2EDF0;
+    --ink-soft: #8FA8B0;
+    --accent: #6FC4D6;
+    --accent-ink: #06262E;
+    --red: #E97862;
+    --ring: rgba(111, 196, 214, .45);
+    --shadow: 0 2px 14px rgba(0, 0, 0, .4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 34px 16px 64px;
+  }
+
+  header { text-align: center; }
+  h1 {
+    margin: 0;
+    font-size: clamp(1.7rem, 6vw, 2.3rem);
+    font-weight: 900;
+    letter-spacing: .05em;
+    text-wrap: balance;
+  }
+  .flowchip {
+    display: inline-block;
+    padding: 0 .22em;
+    color: #fff;
+    border-radius: .45em;
+    line-height: 1.35;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+    /* 波模様は JS が data URI で背景に設定する */
+    background-color: #2E9BC4;
+  }
+  .tagline {
+    margin: 8px 0 0;
+    color: var(--ink-soft);
+    font-size: .95rem;
+    text-wrap: balance;
+  }
+
+  .howto {
+    margin: 16px 0 0;
+    padding: 4px 16px;
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: 12px;
+    font-size: .9rem;
+    text-align: left;
+  }
+  .howto summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 6px 0;
+  }
+  .howto p { margin: 6px 0 10px; }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 20px 0 14px;
+  }
+  .seg {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ink) 7%, transparent);
+  }
+  .seg button {
+    border: none;
+    border-radius: 999px;
+    padding: 7px 15px;
+    font: inherit;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: transparent;
+    cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--card);
+    color: var(--accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+  }
+
+  .btn {
+    font: inherit;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 9px 20px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { background: color-mix(in srgb, var(--accent) 88%, var(--ink)); }
+  .btn.ghost {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--accent);
+  }
+  .btn.ghost:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn:disabled:hover { background: transparent; }
+  .btn.primary:disabled:hover { background: var(--accent); }
+  button:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .page-card {
+    background-color: var(--card);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 22px 22px;
+    border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+    border-radius: 14px;
+    padding: 18px 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .badge {
+    display: inline-block;
+    padding: 2px 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: .9rem;
+  }
+  .badge.soft {
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    color: var(--ink-soft);
+  }
+  .score {
+    color: var(--ink-soft);
+    font-weight: 700;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 完成図 + 手元のピース */
+  .prep {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 22px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .prep h2 {
+    margin: 0 0 6px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-align: center;
+    letter-spacing: .08em;
+  }
+  .goalgrid {
+    --gcell: 24px;
+    display: grid;
+    grid-template-columns: repeat(5, var(--gcell));
+    grid-auto-rows: var(--gcell);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .25);
+  }
+  .goalgrid .gc {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, .92);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+  .tray {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 300px;
+    min-height: 52px;
+    align-items: center;
+  }
+  .traypiece {
+    position: relative;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: transform .12s;
+  }
+  .traypiece:hover { transform: translateY(-2px); }
+  .traypiece[aria-pressed="true"] {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
+  }
+  .traypiece .tc {
+    position: absolute;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25);
+  }
+  .traypiece .letter {
+    position: absolute;
+    z-index: 2;
+    font-size: 12px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, .95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+    pointer-events: none;
+  }
+  .tray-empty {
+    color: var(--ink-soft);
+    font-size: .82rem;
+  }
+
+  /* 盤面 */
+  .board-center {
+    display: flex;
+    justify-content: center;
+    padding: 18px 0 8px;
+  }
+  .board-holder { position: relative; }
+  .board {
+    --bcell: clamp(36px, 11vw, 50px);
+    position: relative;
+    width: calc(var(--bcell) * 7);
+    height: calc(var(--bcell) * 7);
+    border-radius: 12px;
+    background: var(--tray);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .3), inset 0 0 0 1px rgba(255, 255, 255, .05);
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  .bcell {
+    position: absolute;
+    width: var(--bcell);
+    height: var(--bcell);
+  }
+  .bcell.wall {
+    background: var(--tray-wall);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+  }
+  .bcell.inner {
+    background-image:
+      linear-gradient(var(--tray-groove), var(--tray-groove)),
+      linear-gradient(var(--tray-groove), var(--tray-groove));
+    background-size: 60% 2px, 2px 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .bcell.ringcell {
+    background: var(--tray-ring);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
+  }
+  .bcell.ringcell.open-ok {
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px var(--open-glow), inset 0 0 10px rgba(0, 0, 0, .4);
+    animation: pulse 1.1s ease-in-out infinite alternate;
+  }
+  @keyframes pulse {
+    from { opacity: .65; }
+    to { opacity: 1; }
+  }
+
+  .piece {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: transform .16s ease-out;
+    cursor: pointer;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .45));
+    z-index: 2;
+  }
+  .piece.selected { z-index: 3; filter: drop-shadow(0 0 7px var(--open-glow)); }
+  .piece .pc {
+    position: absolute;
+    width: var(--bcell);
+    height: var(--bcell);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
+  }
+  .piece .letter {
+    position: absolute;
+    z-index: 2;
+    font-size: calc(var(--bcell) * .34);
+    font-weight: 900;
+    color: rgba(255, 255, 255, .95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    pointer-events: none;
+    line-height: 1;
+    padding: 4px 0 0 6px;
+  }
+  .piece.hintflash { animation: hintflash .5s ease-in-out 3; }
+  @keyframes hintflash {
+    50% { filter: drop-shadow(0 0 12px var(--open-glow)) brightness(1.35); }
+  }
+
+  /* 移動コントロール */
+  .dock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    min-height: 54px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .dock .who {
+    font-weight: 700;
+    color: var(--ink-soft);
+    font-size: .9rem;
+  }
+  .dock .who b { color: var(--accent); }
+  .movebtn {
+    font: inherit;
+    font-weight: 900;
+    font-size: 1.1rem;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    background: var(--card);
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .movebtn:hover { background: color-mix(in srgb, var(--accent) 12%, var(--card)); }
+  .movebtn:disabled { opacity: .35; cursor: default; }
+  .dock .out { width: auto; padding: 0 14px; font-size: .9rem; }
+  .dock[hidden] { display: none; }
+
+  #maru {
+    position: absolute;
+    inset: -18px -24px;
+    width: calc(100% + 48px);
+    height: calc(100% + 36px);
+    pointer-events: none;
+    z-index: 5;
+  }
+  #maru path {
+    fill: none;
+    stroke: var(--red);
+    stroke-width: 4.5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    opacity: .9;
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+  }
+  .celebrate #maru path {
+    animation: drawMaru .7s cubic-bezier(.5, 0, .3, 1) .1s forwards;
+  }
+  @keyframes drawMaru { to { stroke-dashoffset: 0; } }
+
+  .msg {
+    min-height: 3.2em;
+    margin: 6px 0 10px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: .95rem;
+    text-wrap: balance;
+  }
+  .msg.good { color: var(--red); font-weight: 900; font-size: 1.05rem; }
+  .msg.bad { color: var(--ink); }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .note {
+    margin: 14px 6px 0;
+    color: var(--ink-soft);
+    font-size: .82rem;
+    text-align: center;
+  }
+  .note a { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1><span class="flowchip" id="flowchip">IQ Flow</span> ドリル</h1>
+    <p class="tagline">完成図のとおりに、ピースを縁のみぞからスライドで入れよう。上から置くのは禁止。<strong>波の向きにしか動かせない!</strong></p>
+    <details class="howto">
+      <summary>あそびかた(はじめての人へ)</summary>
+      <p>SmartGames のパズル「IQ Flow」の練習ページです。中央の 5×5 を 8 個のピースでぴったり埋めます。ただしピースは上から置けず、<strong>盤の縁の開いているみぞ(光っているマス)からスライドさせて入れる</strong>ことしかできません。しかも各ピースは、しま模様(波)の向きにしか動けません。</p>
+      <p><strong>操作</strong>: ①手元のピースをタップ → 入れられる口が光るので、そこをタップして挿入。②盤の上のピースをタップ → 矢印ボタン(またはキーボードの矢印キー)で 1 マスずつ動かす。開いている口からなら、いったん外周にはみ出したり、盤の外へ出したりもできます。</p>
+      <p><strong>手数</strong>: 同じピースを続けて動かしている間は 1 手と数えます。ピースを持ちかえると次の 1 手です。最短手数でのクリアを目指そう。「やさしい」は挿入する順番だけのパズル、「ふつう」「むずかしい」は途中でピースをよけたり出し入れしたりする必要があります。</p>
+      <p>※ 実物では正解と違う場所にも挿入できますが、このドリルでは考えやすいように、各ピースは完成図の行(または列)にだけ挿入できるようにしています。</p>
+    </details>
+  </header>
+
+  <section class="controls">
+    <div class="seg" role="group" aria-label="難しさ">
+      <button data-level="easy" aria-pressed="true">やさしい</button>
+      <button data-level="normal" aria-pressed="false">ふつう</button>
+      <button data-level="hard" aria-pressed="false">むずかしい</button>
+    </div>
+    <button id="newBtn" class="btn ghost">新しい問題</button>
+  </section>
+
+  <section class="page-card">
+    <div class="card-top">
+      <div class="badges">
+        <span class="badge" id="lvBadge">やさしい</span>
+        <span class="badge soft" id="optBadge">最短 8 手</span>
+        <span class="badge soft" id="moveBadge">いま 0 手</span>
+      </div>
+      <span class="score" id="score">正解 0 問</span>
+    </div>
+
+    <div class="prep">
+      <div>
+        <h2>かんせい図</h2>
+        <div class="goalgrid" id="goalgrid" aria-label="完成図"></div>
+      </div>
+      <div>
+        <h2>手元のピース(タップで選択)</h2>
+        <div class="tray" id="tray"></div>
+      </div>
+    </div>
+
+    <div class="board-center">
+      <div class="board-holder" id="boardHolder">
+        <div class="board" id="board" aria-label="盤面"></div>
+        <svg id="maru" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M50 5 C 79 3 96 21 95 49 C 94 78 77 95 50 95 C 22 95 5 77 5 50 C 5 22 23 8 58 7" pathLength="300"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="dock" id="dock" hidden>
+      <span class="who" id="dockWho"></span>
+      <button class="movebtn" id="mvNeg" aria-label="マイナス方向へ動かす">◀</button>
+      <button class="movebtn" id="mvPos" aria-label="プラス方向へ動かす">▶</button>
+      <button class="movebtn out" id="mvOut">盤の外に出す</button>
+    </div>
+
+    <p id="msg" class="msg" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button id="hintBtn" class="btn ghost">ヒント</button>
+      <button id="resetBtn" class="btn ghost">やりなおす</button>
+      <button id="revealBtn" class="btn primary">答えを見る</button>
+    </div>
+  </section>
+
+  <p class="note">SmartGames「<a href="https://smartgames.com/uk/one-player-games/iq-flow" target="_blank" rel="noopener">IQ Flow</a>」(<a href="https://www.smartgamesandpuzzles.com/iq-flow.html" target="_blank" rel="noopener">Raf Peeters 作</a>、2026)で遊ぶための非公式ファンページです。盤の開口部やピースの形は公式写真から復元したもので、実物と細部が異なる可能性があります。問題は、スライドで実現可能な全 211 配置から出題しています。</p>
+</main>
+<script>
+'use strict';
+// ==ENGINE-START== IQ Flow エンジン (iqflow/iqflow.js と同一モデル・DOM 非依存)
+
+const N = 5, FR = 7;
+const OPEN = { left: [0, 3, 4], right: [1, 2, 3], bottom: [0, 1, 3, 4], top: [] };
+const PIECE_DEFS = {
+  A: { cells: [[0, 0], [0, 1]],                 axis: 'v' },
+  B: { cells: [[0, 0], [0, 1]],                 axis: 'h' },
+  C: { cells: [[0, 0], [0, 1], [0, 2]],         axis: 'h' },
+  D: { cells: [[0, 0], [0, 1], [1, 1]],         axis: 'h' },
+  E: { cells: [[0, 0], [0, 1], [1, 0]],         axis: 'h' },
+  F: { cells: [[0, 0], [0, 1], [0, 2], [1, 0]], axis: 'h' },
+  G: { cells: [[0, 0], [1, 0], [1, 1], [2, 1]], axis: 'v' },
+  H: { cells: [[0, 1], [1, 0], [1, 1], [2, 1]], axis: 'v' },
+};
+
+const cellBit = (r, c) => 1n << BigInt((r + 1) * FR + (c + 1));
+const USABLE = (() => {
+  let m = 0n;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) m |= cellBit(r, c);
+  for (const r of OPEN.left) m |= cellBit(r, -1);
+  for (const r of OPEN.right) m |= cellBit(r, N);
+  for (const c of OPEN.bottom) m |= cellBit(N, c);
+  for (const c of OPEN.top) m |= cellBit(-1, c);
+  return m;
+})();
+
+const normalize = (cells) => {
+  const mr = Math.min(...cells.map((x) => x[0]));
+  const mc = Math.min(...cells.map((x) => x[1]));
+  return cells.map(([r, c]) => [r - mr, c - mc]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+};
+const cellsKey = (cells) => normalize(cells).map((x) => x.join(',')).join(';');
+const rot90 = (cells) => normalize(cells.map(([r, c]) => [c, -r]));
+
+const ORIENTATIONS = {};
+for (const id of Object.keys(PIECE_DEFS)) {
+  const out = [], seen = new Set();
+  let cells = normalize(PIECE_DEFS[id].cells), axis = PIECE_DEFS[id].axis;
+  for (let k = 0; k < 4; k++) {
+    const key = cellsKey(cells) + '|' + axis;
+    if (!seen.has(key)) { seen.add(key); out.push({ cells, axis }); }
+    cells = rot90(cells);
+    axis = axis === 'h' ? 'v' : 'h';
+  }
+  ORIENTATIONS[id] = out;
+}
+
+function axisOfGoal(id, cells) {
+  const key = cellsKey(cells);
+  const hit = ORIENTATIONS[id].find((o) => cellsKey(o.cells) === key);
+  if (!hit) throw new Error('ピース ' + id + ' の形が不正');
+  return hit.axis;
+}
+
+function buildPlacedPiece(id, goalCells) {
+  const axis = axisOfGoal(id, goalCells);
+  const base = goalCells.map(([r, c]) => [r, c]);
+  const shifted = (d) =>
+    axis === 'h' ? base.map(([r, c]) => [r, c + d]) : base.map(([r, c]) => [r + d, c]);
+  const maskOf = (cells) => cells.reduce((m, [r, c]) => m | cellBit(r, c), 0n);
+  const inFrame = (cells) => cells.every(([r, c]) => r >= -1 && r <= N && c >= -1 && c <= N);
+
+  const positions = [];
+  for (let d = -(N + 1); d <= N + 1; d++) {
+    const cells = shifted(d);
+    if (!inFrame(cells)) continue;
+    const m = maskOf(cells);
+    if ((m & ~USABLE) === 0n) positions.push({ d, cells, mask: m });
+  }
+  const goalIdx = positions.findIndex((p) => p.d === 0);
+
+  function entryMask(pos, side) {
+    let m = 0n;
+    if (axis === 'h') {
+      if (side !== 'left' && side !== 'right') return null;
+      const rows = new Map();
+      for (const [r, c] of pos.cells) {
+        if (!rows.has(r)) rows.set(r, [c, c]);
+        const e = rows.get(r);
+        e[0] = Math.min(e[0], c); e[1] = Math.max(e[1], c);
+      }
+      for (const [r, [lo, hi]] of rows) {
+        if (side === 'left') for (let c = -1; c <= hi; c++) m |= cellBit(r, c);
+        else for (let c = lo; c <= N; c++) m |= cellBit(r, c);
+      }
+    } else {
+      if (side !== 'bottom' && side !== 'top') return null;
+      const cols = new Map();
+      for (const [r, c] of pos.cells) {
+        if (!cols.has(c)) cols.set(c, [r, r]);
+        const e = cols.get(c);
+        e[0] = Math.min(e[0], r); e[1] = Math.max(e[1], r);
+      }
+      for (const [c, [lo, hi]] of cols) {
+        if (side === 'bottom') for (let r = lo; r <= N; r++) m |= cellBit(r, c);
+        else for (let r = -1; r <= hi; r++) m |= cellBit(r, c);
+      }
+    }
+    return (m & ~USABLE) === 0n ? m : null;
+  }
+
+  const sides = axis === 'h' ? ['left', 'right'] : ['bottom', 'top'];
+  for (const pos of positions) {
+    pos.entry = {};
+    for (const s of sides) pos.entry[s] = entryMask(pos, s);
+  }
+  const slide = (p, q) => {
+    let m = 0n;
+    for (let i = Math.min(p, q); i <= Math.max(p, q); i++) m |= positions[i].mask;
+    return m;
+  };
+  return { id, axis, goalCells: base, positions, goalIdx, sides, slide };
+}
+
+const ARROW = { left: '→', right: '←', bottom: '↑', top: '↓' };
+
+function stateKey(state) {
+  let k = 0;
+  for (let i = 0; i < state.length; i++) k += state[i] * 16 ** i;
+  return k;
+}
+function occupancyOf(state, pieces) {
+  let occ = 0n;
+  for (let i = 0; i < state.length; i++) {
+    if (state[i] > 0) occ |= pieces[i].positions[state[i] - 1].mask;
+  }
+  return occ;
+}
+function* legalMoves(state, pieces, occ) {
+  for (let i = 0; i < pieces.length; i++) {
+    const pc = pieces[i];
+    if (state[i] === 0) {
+      for (let q = 0; q < pc.positions.length; q++) {
+        const pos = pc.positions[q];
+        for (const s of pc.sides) {
+          const sw = pos.entry[s];
+          if (sw !== null && (sw & occ) === 0n) {
+            yield { piece: i, to: q + 1, kind: 'insert', side: s, arrow: ARROW[s], pos };
+          }
+        }
+      }
+    } else {
+      const p = state[i] - 1;
+      const others = occ & ~pc.positions[p].mask;
+      for (let q = 0; q < pc.positions.length; q++) {
+        if (q === p) continue;
+        if ((pc.slide(p, q) & others) === 0n) {
+          const arrow = pc.axis === 'h' ? (q > p ? '→' : '←') : q > p ? '↓' : '↑';
+          yield { piece: i, to: q + 1, kind: 'slide', arrow, pos: pc.positions[q] };
+        }
+      }
+      for (const s of pc.sides) {
+        const sw = pc.positions[p].entry[s];
+        if (sw !== null && (sw & others) === 0n) {
+          const arrow = s === 'left' ? '←' : s === 'right' ? '→' : s === 'bottom' ? '↓' : '↑';
+          yield { piece: i, to: 0, kind: 'remove', side: s, arrow };
+        }
+      }
+    }
+  }
+}
+const applyMove = (state, mv) => {
+  const s = state.slice();
+  s[mv.piece] = mv.to;
+  return s;
+};
+
+// 任意の局面 start から完成 (全ピース d=0) までの最短手順を BFS で求める
+function solveFrom(pieces, start) {
+  const goalState = pieces.map((pc) => pc.goalIdx + 1);
+  const goalKey = stateKey(goalState);
+  const visited = new Map();
+  visited.set(stateKey(start), { prevKey: -1, move: null, state: start });
+  let frontier = [start];
+  let found = stateKey(start) === goalKey ? stateKey(start) : null;
+  while (frontier.length > 0 && found === null) {
+    const next = [];
+    for (const st of frontier) {
+      const occ = occupancyOf(st, pieces);
+      for (const mv of legalMoves(st, pieces, occ)) {
+        const ns = applyMove(st, mv);
+        const nk = stateKey(ns);
+        if (visited.has(nk)) continue;
+        visited.set(nk, { prevKey: stateKey(st), move: { ...mv, id: pieces[mv.piece].id }, state: ns });
+        if (nk === goalKey) { found = nk; break; }
+        next.push(ns);
+      }
+      if (found !== null) break;
+    }
+    frontier = next;
+  }
+  if (found === null) return { solvable: false };
+  const moves = [];
+  for (let k = found; visited.get(k).prevKey !== -1; k = visited.get(k).prevKey) {
+    moves.unshift(visited.get(k).move);
+  }
+  return { solvable: true, moves };
+}
+
+// 25 文字のレター列 (行優先) → {id: cells}
+function decodeChallenge(g) {
+  const goal = {};
+  for (let i = 0; i < 25; i++) {
+    const id = g[i];
+    (goal[id] = goal[id] || []).push([Math.floor(i / 5), i % 5]);
+  }
+  return goal;
+}
+// ==ENGINE-END==
+
+// 実現可能な全 211 配置 {g: 25文字, n: 最短手数}。iqflow/dump-challenges.js で生成。
+const CHALLENGES = [{"g":"AABBDHHHDDFHGGEFGGEEFFCCC","n":8},{"g":"AABBHDDEHHDEEGHFFFGGFCCCG","n":8},{"g":"AABBHEDDHHEEDGHFFFGGFCCCG","n":8},{"g":"AABBHFFFHHFDDGHEEDGGECCCG","n":8},{"g":"AACCCBBFDDFFFGDEEHGGEHHHG","n":8},{"g":"AACCCBBGGDFGGDDFHHHEFFHEE","n":8},{"g":"AACCCBBGGEFGGEEFHHHDFFHDD","n":8},{"g":"AACCCBBGGHFGGHHFDDEHFFDEE","n":8},{"g":"AACCCDDGGHDGGHHBBFEHFFFEE","n":8},{"g":"AACCCDDGGHDGGHHFFFEHFBBEE","n":8},{"g":"AACCCEEGGHEGGHHBBFDHFFFDD","n":8},{"g":"AACCCEEGGHEGGHHFFFDHFBBDD","n":8},{"g":"AACCCFEEGGFEGGHFFDHHBBDDH","n":8},{"g":"AACCCFFFDDFBBGDEEHGGEHHHG","n":8},{"g":"AACCCFFFGGFBGGHEBDHHEEDDH","n":8},{"g":"AACCCFFFGGFDGGHEDDHHEEBBH","n":8},{"g":"AACCCGHHHDGGHDDEGBBFEEFFF","n":8},{"g":"AACCCGHHHDGGHDDEGFFFEEFBB","n":8},{"g":"AACCCGHHHEGGHEEDGBBFDDFFF","n":8},{"g":"AACCCGHHHEGGHEEDGFFFDDFBB","n":8},{"g":"AACCCHHHDDFHEGDFEEGGFFBBG","n":8},{"g":"AACCCHHHDDFHGGDFGGEEFFBBE","n":8},{"g":"AACCCHHHGGFHGGBFDDEBFFDEE","n":8},{"g":"AACCCHHHGGFHGGEFDDEEFFDBB","n":8},{"g":"BBCCCAAFDDFFFGDEEHGGEHHHG","n":8},{"g":"BBCCCAAGGDFGGDDFHHHEFFHEE","n":8},{"g":"BBCCCAAGGEFGGEEFHHHDFFHDD","n":8},{"g":"BBCCCAAGGHFGGHHFDDEHFFDEE","n":8},{"g":"BBCCCFEEGGFEGGHFFDHHAADDH","n":8},{"g":"BBCCCGHHHDGGHDDEGFFFEEFAA","n":8},{"g":"BBCCCGHHHEGGHEEDGFFFDDFAA","n":8},{"g":"BBCCCHHHGGFHGGAFDDEAFFDEE","n":8},{"g":"BBCCCHHHGGFHGGEFDDEEFFDAA","n":8},{"g":"CCCAABBFDDFFFGDEEHGGEHHHG","n":8},{"g":"CCCAABBGGDFGGDDFHHHEFFHEE","n":8},{"g":"CCCAABBGGEFGGEEFHHHDFFHDD","n":8},{"g":"CCCAABBGGHFGGHHFDDEHFFDEE","n":8},{"g":"CCCAADDGGHDGGHHBBFEHFFFEE","n":8},{"g":"CCCAADDGGHDGGHHFFFEHFBBEE","n":8},{"g":"CCCAAEEGGHEGGHHBBFDHFFFDD","n":8},{"g":"CCCAAEEGGHEGGHHFFFDHFBBDD","n":8},{"g":"CCCAAFEEGGFEGGHFFDHHBBDDH","n":8},{"g":"CCCAAFFFDDFBBGDEEHGGEHHHG","n":8},{"g":"CCCAAFFFGGFBGGHEBDHHEEDDH","n":8},{"g":"CCCAAFFFGGFDGGHEDDHHEEBBH","n":8},{"g":"CCCAAGHHHDGGHDDEGBBFEEFFF","n":8},{"g":"CCCAAGHHHDGGHDDEGFFFEEFBB","n":8},{"g":"CCCAAGHHHEGGHEEDGBBFDDFFF","n":8},{"g":"CCCAAGHHHEGGHEEDGFFFDDFBB","n":8},{"g":"CCCAAHHHDDFHEGDFEEGGFFBBG","n":8},{"g":"CCCAAHHHDDFHGGDFGGEEFFBBE","n":8},{"g":"CCCAAHHHGGFHGGBFDDEBFFDEE","n":8},{"g":"CCCAAHHHGGFHGGEFDDEEFFDBB","n":8},{"g":"CCCBBAAFDDFFFGDEEHGGEHHHG","n":8},{"g":"CCCBBAAGGDFGGDDFHHHEFFHEE","n":8},{"g":"CCCBBAAGGEFGGEEFHHHDFFHDD","n":8},{"g":"CCCBBAAGGHFGGHHFDDEHFFDEE","n":8},{"g":"CCCBBFEEGGFEGGHFFDHHAADDH","n":8},{"g":"CCCBBGHHHDGGHDDEGFFFEEFAA","n":8},{"g":"CCCBBGHHHEGGHEEDGFFFDDFAA","n":8},{"g":"CCCBBHHHGGFHGGAFDDEAFFDEE","n":8},{"g":"CCCBBHHHGGFHGGEFDDEEFFDAA","n":8},{"g":"CCCDDAAFDBFFFGBEEHGGEHHHG","n":8},{"g":"CCCDDAAFDHFFFHHEEGGHEGGBB","n":8},{"g":"CCCDDBBFDAFFFGAEEHGGEHHHG","n":8},{"g":"CCCDDBBFDHFFFHHEEGGHEGGAA","n":8},{"g":"CCCDDFFFDAFBBGAEEHGGEHHHG","n":8},{"g":"CCCDDFFFDHFBBHHEEGGHEGGAA","n":8},{"g":"CCCDDHHHDAFHEGAFEEGGFFBBG","n":8},{"g":"CCCDDHHHDAFHGGAFGGEEFFBBE","n":8},{"g":"CCCEEAAFGEFFFGGDBBHGDDHHH","n":8},{"g":"CCCEEAAFGEFFFGGDHHHGDDHBB","n":8},{"g":"CCCEEBBFGEFFFGGDHHHGDDHAA","n":8},{"g":"CCCEEDDAGEFDAGGFBBHGFFHHH","n":8},{"g":"CCCEEDDAGEFDAGGFHHHGFFHBB","n":8},{"g":"CCCEEFFFGEFBBGGDHHHGDDHAA","n":8},{"g":"DDBBHDEAHHEEAGHFFFGGFCCCG","n":8},{"g":"DDBBHDGGHHGGFEHFFFEEAACCC","n":8},{"g":"DDBBHDGGHHGGFEHFFFEECCCAA","n":8},{"g":"DDCCCDEEAAFEGGHFGGHHFFBBH","n":8},{"g":"DDCCCDEEGGFEGGAFBBHAFFHHH","n":8},{"g":"DDCCCDEEGGFEGGAFHHHAFFHBB","n":8},{"g":"DDCCCDEEGGFEGGBFHHHBFFHAA","n":8},{"g":"DDCCCDGGEEGGFEHFFFHHAABBH","n":8},{"g":"ECCCBEEFGBFFFGGDHHHGDDHAA","n":8},{"g":"ECCCBEEGGBFGGAAFHHHDFFHDD","n":8},{"g":"ECCCBEEGGBFGGDDFHHHDFFHAA","n":8},{"g":"ECCCHEEAHHFBAGHFBDGGFFDDG","n":8},{"g":"ECCCHEEAHHFDAGHFDDGGFFBBG","n":8},{"g":"ECCCHEEAHHFFAGHBFDGGBFDDG","n":8},{"g":"ECCCHEEFHHFFFGHAADGGBBDDG","n":8},{"g":"ECCCHEEFHHFFFGHABDGGABDDG","n":8},{"g":"ECCCHEEFHHFFFGHBADGGBADDG","n":8},{"g":"ECCCHEEFHHFFFGHBBDGGAADDG","n":8},{"g":"EECCCFEGGHFGGHHFFADHBBADD","n":8},{"g":"FBBEEFDDGEFFDGGCCCHGAAHHH","n":8},{"g":"FBCCCFBADDFFAGDEEHGGEHHHG","n":8},{"g":"FCCCBFDDGBFFDGGAEEHGAEHHH","n":8},{"g":"FCCCBFDDGBFFDGGEHHHGEEHAA","n":8},{"g":"FCCCBFHHHBFFHAAEEGGDEGGDD","n":8},{"g":"FCCCBFHHHBFFHDDEEGGDEGGAA","n":8},{"g":"FCCCHFDDHHFFDGHAEEGGAEBBG","n":8},{"g":"FFCCCBFADDBFAGDEEHGGEHHHG","n":8},{"g":"GBBAAGGFFFCGFDDCEEHDCEHHH","n":8},{"g":"GBBAAGGHHHFGEHDFEEDDFFCCC","n":8},{"g":"GCCCBGGAEBFGAEEFHHHDFFHDD","n":8},{"g":"GCCCBGGEEBFGEAAFHHHDFFHDD","n":8},{"g":"GCCCBGGEEBFGEDDFHHHDFFHAA","n":8},{"g":"GCCCDGGADDFGABBFHHHEFFHEE","n":8},{"g":"GCCCDGGADDFGAEEFBBHEFFHHH","n":8},{"g":"GCCCDGGADDFGAEEFHHHEFFHBB","n":8},{"g":"GCCCHGGAHHFGAEHFDDEEFFDBB","n":8},{"g":"HBBAAHHEDDHEEGDFFFGGFCCCG","n":8},{"g":"HBBAAHHFFFHEFGGEEGGDCCCDD","n":8},{"g":"HBBAAHHGGCHGGFCEDDFCEEDFF","n":8},{"g":"HBBAAHHGGDHGGDDECCCFEEFFF","n":8},{"g":"HBBAAHHGGDHGGDDFFFEEFCCCE","n":8},{"g":"HBBAAHHGGEHGGEEDCCCFDDFFF","n":8},{"g":"HBBAAHHGGEHGGEEFFFDDFCCCD","n":8},{"g":"HBBDDHHEDAHEEGAFFFGGFCCCG","n":8},{"g":"HCCCBHHGGBHGGFAEDDFAEEDFF","n":8},{"g":"HCCCBHHGGBHGGFFEDDAFEEDAF","n":8},{"g":"AACCCEEBBFHEFFFHHGGDHGGDD","n":9},{"g":"AACCCEEFFFBEFGGBHGGDHHHDD","n":9},{"g":"AACCCEEFFFHEFBBHHGGDHGGDD","n":9},{"g":"AACCCEEFFFHEFGGHHGGDHBBDD","n":9},{"g":"BBCCCDDGGHDGGHHAAFEHFFFEE","n":9},{"g":"BBCCCEEFFFHEFAAHHGGDHGGDD","n":9},{"g":"BBCCCEEFFFHEFDDHHGGDHGGAA","n":9},{"g":"BBCCCHHHGGEHGGAEEFDAFFFDD","n":9},{"g":"BBCCCHHHGGEHGGDEEFDDFFFAA","n":9},{"g":"CCCAADDBBFHDFFFHHGGEHGGEE","n":9},{"g":"CCCAADDFFFHDFBBHHGGEHGGEE","n":9},{"g":"CCCAAEEBBFHEFFFHHGGDHGGDD","n":9},{"g":"CCCAAEEFFFBEFGGBHGGDHHHDD","n":9},{"g":"CCCAAEEFFFHEFBBHHGGDHGGDD","n":9},{"g":"CCCAAEEFFFHEFGGHHGGDHBBDD","n":9},{"g":"CCCBBDDGGHDGGHHAAFEHFFFEE","n":9},{"g":"CCCBBEEFFFHEFAAHHGGDHGGDD","n":9},{"g":"CCCBBEEFFFHEFDDHHGGDHGGAA","n":9},{"g":"CCCBBHHHGGEHGGAEEFDAFFFDD","n":9},{"g":"CCCBBHHHGGEHGGDEEFDDFFFAA","n":9},{"g":"CCCEEGHHHEGGHAADGBBFDDFFF","n":9},{"g":"CCCEEGHHHEGGHAADGFFFDDFBB","n":9},{"g":"CCCEEGHHHEGGHBBDGFFFDDFAA","n":9},{"g":"CCCEEGHHHEGGHFBDGAFBDDAFF","n":9},{"g":"CCCEEGHHHEGGHFFAGDDFABBDF","n":9},{"g":"CCCEEGHHHEGGHFFDGABFDDABF","n":9},{"g":"CCCFBAAEFBHEEFFHHGGDHGGDD","n":9},{"g":"CCCFBEEAFBHEAFFHHGGDHGGDD","n":9},{"g":"CCCFFAAEBFHEEBFHHGGDHGGDD","n":9},{"g":"CCCFFEEABFHEABFHHGGDHGGDD","n":9},{"g":"CCCFFEHHHFEEHGFAADGGBBDDG","n":9},{"g":"CCCFFEHHHFEEHGFABDGGABDDG","n":9},{"g":"CCCFFEHHHFEEHGFBADGGBADDG","n":9},{"g":"CCCFFEHHHFEEHGFBBDGGAADDG","n":9},{"g":"CCCFFGHHHFGGHBFEGABDEEADD","n":9},{"g":"CCCFFGHHHFGGHBFEGDBAEEDDA","n":9},{"g":"CCCFFGHHHFGGHEFDGAEEDDABB","n":9},{"g":"DDCCCDEEGGBEGGFBHFFFHHHAA","n":9},{"g":"DDCCCDEEGGHEGGFHHFFFHBBAA","n":9},{"g":"FBBEEFHHHEFFHGGAAGGDCCCDD","n":9},{"g":"GBBAAGGCCCEGHHHEEFHDFFFDD","n":9},{"g":"GBBAAGGDFFCGDDFCEEHFCEHHH","n":9},{"g":"GBBDDGGADCHGAFCHHEFCHEEFF","n":9},{"g":"GBBFFGGACFHGACFHHECDHEEDD","n":9},{"g":"GCCCBGGAHBEGAHHEEFHDFFFDD","n":9},{"g":"GCCCDGGADDHGAFBHHEFBHEEFF","n":9},{"g":"GCCCDGGADDHGAFFHHEBFHEEBF","n":9},{"g":"GCCCHGGAHHEGABHEEFBDFFFDD","n":9},{"g":"GCCCHGGDHHEGDDHEEBBFAAFFF","n":9},{"g":"GCCCHGGDHHEGDDHEEFFFAAFBB","n":9},{"g":"GCCCHGGDHHEGDDHEEFFFBBFAA","n":9},{"g":"GCCCHGGDHHFGDDHFBBEAFFEEA","n":9},{"g":"HBBAAHHGGCHGGFCDDEFCDEEFF","n":9},{"g":"HBBFFHHEEFHCEGFACDGGACDDG","n":9},{"g":"HCCCBHHAGBHDAGGDDFEGFFFEE","n":9},{"g":"HCCCBHHGGBHGGDDAAFEDFFFEE","n":9},{"g":"HCCCBHHGGBHGGEEAAFEDFFFDD","n":9},{"g":"HCCCBHHGGBHGGFADDEFADEEFF","n":9},{"g":"BBCCCAAFFFDDFEEDGGHEGGHHH","n":10},{"g":"BBCCCDDHFFDHHHFEEGGFEGGAA","n":10},{"g":"CCCAADDHFFDHHHFEEGGFEGGBB","n":10},{"g":"CCCAAEEFFFBEFDDBGGHDGGHHH","n":10},{"g":"CCCBBAAFFFDDFEEDGGHEGGHHH","n":10},{"g":"CCCBBDDHFFDHHHFEEGGFEGGAA","n":10},{"g":"CCCDDGBBDFGGFFFAGHEEAHHHE","n":10},{"g":"CCCEEAAGGEFGGBBFHHHDFFHDD","n":10},{"g":"CCCEEAAGGEFGGDDFBBHDFFHHH","n":10},{"g":"CCCEEAAGGEFGGDDFHHHDFFHBB","n":10},{"g":"CCCFFDDGGFDGGBFEEHBAEHHHA","n":10},{"g":"CCCFFGHHHFGGHAFEGDABEEDDB","n":10},{"g":"CCCFFGHHHFGGHBFAGEBDAEEDD","n":10},{"g":"CCCFFGHHHFGGHBFDGABEDDAEE","n":10},{"g":"CCCFFGHHHFGGHEFAGEEDABBDD","n":10},{"g":"GBBFFGGEEFCGEHFCDHHHCDDAA","n":10},{"g":"GCCCBGGADBFGADDFHHHEFFHEE","n":10},{"g":"GCCCHGGDHHEGDDHEEFBBFFFAA","n":10},{"g":"BBCCCAAFEEFFFGEDDHGGDHHHG","n":11},{"g":"BBCCCEEDFFHEDDFHHGGFHGGAA","n":11},{"g":"CCCAAEEDFFBEDDFBGGHFGGHHH","n":11},{"g":"CCCBBAAFEEFFFGEDDHGGDHHHG","n":11},{"g":"CCCBBEEDFFHEDDFHHGGFHGGAA","n":11},{"g":"CCCEEAAGGEBGGFFBHDDFHHHDF","n":11},{"g":"CCCFFAAGGFHGGBFHHEBDHEEDD","n":11},{"g":"CCCFFDDEEFDBEGFABHGGAHHHG","n":11},{"g":"CCCFFDDEEFDHEGFHHHGGAABBG","n":11},{"g":"CCCFFDDGGFDGGAFEEHABEHHHB","n":11},{"g":"GCCCHGGDHHBGDDHBEFFFEEFAA","n":11},{"g":"CCCFFAAGGFBGGEFBHEEDHHHDD","n":12},{"g":"CCCFFAAGGFHGGEFHHEEDHBBDD","n":12}];
+
+// ---- 画面制御 ----
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const boardEl = $('board'), trayEl = $('tray'), goalEl = $('goalgrid');
+  const msgEl = $('msg'), scoreEl = $('score');
+  const lvBadge = $('lvBadge'), optBadge = $('optBadge'), moveBadge = $('moveBadge');
+  const dock = $('dock'), dockWho = $('dockWho');
+  const mvNeg = $('mvNeg'), mvPos = $('mvPos'), mvOut = $('mvOut');
+  const hintBtn = $('hintBtn'), resetBtn = $('resetBtn'), revealBtn = $('revealBtn'), newBtn = $('newBtn');
+  const holder = $('boardHolder');
+
+  const COLORS = {
+    A: ['#F2988F', '#F8C6C0'], B: ['#DE4433', '#F0958A'],
+    C: ['#8C55AC', '#C0A0D6'], D: ['#EFC137', '#F8E29B'],
+    E: ['#EE8F2E', '#F8C88F'], F: ['#1FA07C', '#8CD4BE'],
+    G: ['#3FB2E8', '#A8DFF7'], H: ['#2B4B9B', '#8FA8DC'],
+  };
+  const PIECE_NAMES = {
+    A: 'ピンク', B: '赤', C: '紫', D: '黄色', E: 'オレンジ',
+    F: '緑', G: '水色', H: '青',
+  };
+  const LEVELS = {
+    easy: { label: 'やさしい', filter: (c) => c.n === 8 },
+    normal: { label: 'ふつう', filter: (c) => c.n >= 9 && c.n <= 10 },
+    hard: { label: 'むずかしい', filter: (c) => c.n >= 11 },
+  };
+
+  // 波模様タイル (SVG data URI)。axis 方向に流れる波線。
+  function waveTile(base, lite, axis) {
+    const path = axis === 'h'
+      ? '<path d="M-2 4 Q 4 0 10 4 T 22 4 M-2 14 Q 4 10 10 14 T 22 14" stroke="' + lite + '" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+      : '<path d="M4 -2 Q 0 4 4 10 T 4 22 M14 -2 Q 10 4 14 10 T 14 22" stroke="' + lite + '" stroke-width="3.4" fill="none" stroke-linecap="round"/>';
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">' +
+      '<rect width="20" height="20" fill="' + base + '"/>' + path + '</svg>';
+    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+  }
+
+  let puzzle = null;   // {goal, pieces, byId, optimal}
+  let state = null;    // 各ピース: 0=手元 / pos+1
+  let selected = -1;   // pieces のインデックス。-1 = なし
+  let moveCount = 0, lastActed = -1, hintsUsed = 0;
+  let finished = false, animating = false;
+  let level = 'easy';
+  let solvedCount = 0;
+  try { solvedCount = parseInt(localStorage.getItem('iqflow-solved'), 10) || 0; } catch (e) {}
+
+  function saveScore() { try { localStorage.setItem('iqflow-solved', String(solvedCount)); } catch (e) {} }
+  function updateScore() { scoreEl.textContent = '正解 ' + solvedCount + ' 問'; }
+  function updateMoves() { moveBadge.textContent = 'いま ' + moveCount + ' 手'; }
+  function msg(text, cls) {
+    msgEl.textContent = text;
+    msgEl.className = 'msg' + (cls ? ' ' + cls : '');
+  }
+
+  // タイトルの Flow チップにも波模様を
+  $('flowchip').style.backgroundImage = waveTile('#2E9BC4', '#8FD8F0', 'h');
+
+  //---- 盤の静的マスと目標図・トレイの描画 ----
+  const pieceNodes = new Map(); // pieceIdx -> DOM
+  const ringCells = [];         // {r, c, side, el}
+
+  function cellPos(el, r, c) {
+    el.style.left = 'calc(' + (c + 1) + ' * var(--bcell))';
+    el.style.top = 'calc(' + (r + 1) + ' * var(--bcell))';
+  }
+
+  function buildBoard() {
+    boardEl.innerHTML = '';
+    pieceNodes.clear();
+    ringCells.length = 0;
+    for (let r = -1; r <= N; r++) {
+      for (let c = -1; c <= N; c++) {
+        const el = document.createElement('div');
+        const ring = r === -1 || r === N || c === -1 || c === N;
+        if (!ring) {
+          el.className = 'bcell inner';
+        } else if ((cellBit(r, c) & USABLE) !== 0n) {
+          el.className = 'bcell ringcell';
+          const side = c === -1 ? 'left' : c === N ? 'right' : r === N ? 'bottom' : 'top';
+          ringCells.push({ r, c, side, el });
+          el.addEventListener('click', () => onRingClick(side));
+        } else {
+          el.className = 'bcell wall';
+        }
+        cellPos(el, r, c);
+        boardEl.appendChild(el);
+      }
+    }
+  }
+
+  function renderGoalGrid() {
+    goalEl.innerHTML = '';
+    const seen = new Set();
+    for (let i = 0; i < 25; i++) {
+      const id = puzzle.g[i];
+      const gc = document.createElement('div');
+      gc.className = 'gc';
+      const axis = puzzle.byId[id].axis;
+      gc.style.backgroundImage = waveTile(COLORS[id][0], COLORS[id][1], axis);
+      gc.style.backgroundSize = '12px 12px';
+      if (!seen.has(id)) { seen.add(id); gc.textContent = id; }
+      goalEl.appendChild(gc);
+    }
+  }
+
+  function makePieceCells(container, cells, id, axis, cellSize) {
+    const mr = Math.min(...cells.map((x) => x[0]));
+    const mc = Math.min(...cells.map((x) => x[1]));
+    const keyset = new Set(cells.map(([r, c]) => r + ':' + c));
+    const R = 10; // 角丸
+    for (const [r, c] of cells) {
+      const pc = document.createElement('div');
+      pc.className = container.classList.contains('traypiece') ? 'tc' : 'pc';
+      pc.style.left = (c - mc) * cellSize + 'px';
+      pc.style.top = (r - mr) * cellSize + 'px';
+      pc.style.width = cellSize + 'px';
+      pc.style.height = cellSize + 'px';
+      pc.style.backgroundImage = waveTile(COLORS[id][0], COLORS[id][1], axis);
+      pc.style.backgroundSize = Math.round(cellSize * .42) + 'px ' + Math.round(cellSize * .42) + 'px';
+      const has = (rr, cc) => keyset.has(rr + ':' + cc);
+      pc.style.borderRadius =
+        (!has(r - 1, c) && !has(r, c - 1) ? R : 0) + 'px ' +
+        (!has(r - 1, c) && !has(r, c + 1) ? R : 0) + 'px ' +
+        (!has(r + 1, c) && !has(r, c + 1) ? R : 0) + 'px ' +
+        (!has(r + 1, c) && !has(r, c - 1) ? R : 0) + 'px';
+      container.appendChild(pc);
+    }
+    const letter = document.createElement('span');
+    letter.className = 'letter';
+    const first = normalize(cells)[0];
+    letter.style.left = (first[1]) * cellSize + 'px';
+    letter.style.top = (first[0]) * cellSize + 'px';
+    letter.textContent = id;
+    container.appendChild(letter);
+  }
+
+  function renderTray() {
+    trayEl.innerHTML = '';
+    let any = false;
+    puzzle.pieces.forEach((pc, i) => {
+      if (state[i] !== 0) return;
+      any = true;
+      const tp = document.createElement('div');
+      tp.className = 'traypiece';
+      tp.setAttribute('role', 'button');
+      tp.setAttribute('tabindex', '0');
+      tp.setAttribute('aria-pressed', selected === i ? 'true' : 'false');
+      tp.setAttribute('aria-label', 'ピース ' + pc.id + '(' + PIECE_NAMES[pc.id] + '・' + (pc.axis === 'h' ? '横滑り' : '縦滑り') + ')');
+      const cellSize = 22;
+      const cells = normalize(pc.goalCells);
+      const w = Math.max(...cells.map((x) => x[1])) + 1;
+      const h = Math.max(...cells.map((x) => x[0])) + 1;
+      tp.style.width = w * cellSize + 'px';
+      tp.style.height = h * cellSize + 'px';
+      makePieceCells(tp, cells, pc.id, pc.axis, cellSize);
+      const act = () => selectPiece(i);
+      tp.addEventListener('click', act);
+      tp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); }
+      });
+      trayEl.appendChild(tp);
+    });
+    if (!any) {
+      const s = document.createElement('span');
+      s.className = 'tray-empty';
+      s.textContent = '(ぜんぶ盤の上!)';
+      trayEl.appendChild(s);
+    }
+  }
+
+  function renderPieces() {
+    puzzle.pieces.forEach((pc, i) => {
+      let node = pieceNodes.get(i);
+      if (state[i] === 0) {
+        if (node) { node.remove(); pieceNodes.delete(i); }
+        return;
+      }
+      const pos = pc.positions[state[i] - 1];
+      if (!node) {
+        node = document.createElement('div');
+        node.className = 'piece';
+        node.setAttribute('role', 'button');
+        node.setAttribute('tabindex', '0');
+        node.setAttribute('aria-label', 'ピース ' + pc.id);
+        const org = normalize(pc.goalCells);
+        makePieceCellsBoard(node, pc, org);
+        node.addEventListener('click', () => selectPiece(i));
+        node.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPiece(i); }
+        });
+        boardEl.appendChild(node);
+        pieceNodes.set(i, node);
+      }
+      const mr = Math.min(...pc.goalCells.map((x) => x[0]));
+      const mc = Math.min(...pc.goalCells.map((x) => x[1]));
+      const dr = pc.axis === 'v' ? pos.d : 0;
+      const dc = pc.axis === 'h' ? pos.d : 0;
+      node.style.transform =
+        'translate(calc(' + (mc + 1 + dc) + ' * var(--bcell)), calc(' + (mr + 1 + dr) + ' * var(--bcell)))';
+      node.classList.toggle('selected', selected === i);
+    });
+  }
+
+  // 盤上ピース: サイズを --bcell で組む (px でなく calc)
+  function makePieceCellsBoard(container, pc, cells) {
+    const keyset = new Set(cells.map(([r, c]) => r + ':' + c));
+    const R = 12;
+    for (const [r, c] of cells) {
+      const el = document.createElement('div');
+      el.className = 'pc';
+      el.style.left = 'calc(' + c + ' * var(--bcell))';
+      el.style.top = 'calc(' + r + ' * var(--bcell))';
+      el.style.backgroundImage = waveTile(COLORS[pc.id][0], COLORS[pc.id][1], pc.axis);
+      el.style.backgroundSize = 'calc(var(--bcell) * .42) calc(var(--bcell) * .42)';
+      const has = (rr, cc) => keyset.has(rr + ':' + cc);
+      el.style.borderRadius =
+        (!has(r - 1, c) && !has(r, c - 1) ? R : 0) + 'px ' +
+        (!has(r - 1, c) && !has(r, c + 1) ? R : 0) + 'px ' +
+        (!has(r + 1, c) && !has(r, c + 1) ? R : 0) + 'px ' +
+        (!has(r + 1, c) && !has(r, c - 1) ? R : 0) + 'px';
+      container.appendChild(el);
+    }
+    const letter = document.createElement('span');
+    letter.className = 'letter';
+    const first = cells[0];
+    letter.style.left = 'calc(' + first[1] + ' * var(--bcell))';
+    letter.style.top = 'calc(' + first[0] + ' * var(--bcell))';
+    letter.textContent = pc.id;
+    container.appendChild(letter);
+  }
+
+  //---- 選択と移動 ----
+  function occOthers(i) {
+    const occ = occupancyOf(state, puzzle.pieces);
+    if (state[i] === 0) return occ;
+    return occ & ~puzzle.pieces[i].positions[state[i] - 1].mask;
+  }
+
+  function outermostIdx(pc, side) {
+    // その辺から入れたとき最初に止まれる (いちばん浅い) 位置
+    if (pc.axis === 'h') return side === 'left' ? 0 : pc.positions.length - 1;
+    return side === 'bottom' ? pc.positions.length - 1 : 0;
+  }
+
+  function legalEntrySides(i) {
+    const pc = puzzle.pieces[i];
+    const occ = occupancyOf(state, puzzle.pieces);
+    return pc.sides.filter((s) => {
+      const q = outermostIdx(pc, s);
+      const sw = pc.positions[q].entry[s];
+      return sw !== null && (sw & occ) === 0n;
+    });
+  }
+
+  function highlightOpenings() {
+    const okSides = new Set();
+    const okCells = new Set();
+    if (selected >= 0 && state[selected] === 0 && !finished && !animating) {
+      const pc = puzzle.pieces[selected];
+      for (const s of legalEntrySides(selected)) {
+        okSides.add(s);
+        for (const [r, c] of pc.goalCells) {
+          if (pc.axis === 'h') okCells.add((s === 'left' ? r + ':' + -1 : r + ':' + N));
+          else okCells.add((s === 'bottom' ? N + ':' + c : -1 + ':' + c));
+        }
+      }
+    }
+    for (const rc of ringCells) {
+      rc.el.classList.toggle('open-ok', okCells.has(rc.r + ':' + rc.c));
+    }
+    return okSides;
+  }
+
+  function updateDock() {
+    if (selected < 0 || state[selected] === 0 || finished || animating) {
+      dock.hidden = true;
+      return;
+    }
+    const pc = puzzle.pieces[selected];
+    dock.hidden = false;
+    dockWho.innerHTML = '<b>' + pc.id + '</b> を動かす:';
+    mvNeg.textContent = pc.axis === 'h' ? '◀' : '▲';
+    mvPos.textContent = pc.axis === 'h' ? '▶' : '▼';
+    mvNeg.setAttribute('aria-label', pc.axis === 'h' ? '左へ 1 マス' : '上へ 1 マス');
+    mvPos.setAttribute('aria-label', pc.axis === 'h' ? '右へ 1 マス' : '下へ 1 マス');
+    mvNeg.disabled = !canStep(selected, -1);
+    mvPos.disabled = !canStep(selected, +1);
+    mvOut.disabled = legalExitSides(selected).length === 0;
+  }
+
+  function canStep(i, dir) {
+    const pc = puzzle.pieces[i];
+    const p = state[i] - 1, q = p + dir;
+    if (q < 0 || q >= pc.positions.length) return false;
+    return (pc.positions[q].mask & occOthers(i)) === 0n;
+  }
+
+  function legalExitSides(i) {
+    const pc = puzzle.pieces[i];
+    const p = state[i] - 1;
+    const others = occOthers(i);
+    return pc.sides.filter((s) => {
+      const sw = pc.positions[p].entry[s];
+      return sw !== null && (sw & others) === 0n;
+    });
+  }
+
+  function selectPiece(i) {
+    if (finished || animating) return;
+    selected = (selected === i) ? -1 : i;
+    refresh();
+    if (selected >= 0 && state[selected] === 0) {
+      const sides = legalEntrySides(selected);
+      if (sides.length === 0) {
+        msg('いまは ' + puzzle.pieces[selected].id + ' を入れられる口がありません。先にほかのピースを動かそう。', 'bad');
+      } else {
+        msg('光っている口をタップすると ' + puzzle.pieces[selected].id + ' が入ります。');
+      }
+    } else if (selected >= 0) {
+      msg('矢印ボタン(または矢印キー)で 1 マスずつ動かせます。');
+    } else {
+      msg('');
+    }
+  }
+
+  function countAction(i) {
+    if (lastActed !== i) { moveCount++; lastActed = i; updateMoves(); }
+  }
+
+  function onRingClick(side) {
+    if (selected < 0 || state[selected] !== 0 || finished || animating) return;
+    const pc = puzzle.pieces[selected];
+    if (!legalEntrySides(selected).includes(side)) return;
+    const q = outermostIdx(pc, side);
+    state[selected] = q + 1;
+    countAction(selected);
+    msg('そのまま矢印で奥へ進めよう。');
+    refresh();
+    checkWin();
+  }
+
+  function step(dir) {
+    if (selected < 0 || state[selected] === 0 || finished || animating) return;
+    if (!canStep(selected, dir)) return;
+    state[selected] += dir;
+    countAction(selected);
+    refresh();
+    checkWin();
+  }
+
+  function takeOut() {
+    if (selected < 0 || state[selected] === 0 || finished || animating) return;
+    const sides = legalExitSides(selected);
+    if (sides.length === 0) return;
+    countAction(selected);
+    state[selected] = 0;
+    msg(puzzle.pieces[selected].id + ' を手元にもどしました。');
+    selected = -1;
+    refresh();
+  }
+
+  function refresh() {
+    renderTray();
+    renderPieces();
+    highlightOpenings();
+    updateDock();
+  }
+
+  function checkWin() {
+    if (finished) return;
+    const done = puzzle.pieces.every((pc, i) => state[i] === pc.goalIdx + 1);
+    if (!done) return;
+    finished = true;
+    selected = -1;
+    if (!puzzle.scored) {
+      puzzle.scored = true;
+      solvedCount++;
+      saveScore();
+      updateScore();
+    }
+    refresh();
+    holder.classList.add('celebrate');
+    const opt = puzzle.optimal;
+    let head;
+    if (moveCount <= opt) head = 'クリア!' + moveCount + ' 手 — 最短手数!おみごと!';
+    else head = 'クリア!' + moveCount + ' 手(最短は ' + opt + ' 手)';
+    msg(hintsUsed ? head + '(ヒント ' + hintsUsed + ' 回)' : head, 'good');
+  }
+
+  //---- ヒント・リセット・答え ----
+  function describeMove(mv) {
+    const side = { left: '左', right: '右', bottom: '下', top: '上' };
+    if (mv.kind === 'insert') return mv.id + ' を' + side[mv.side] + 'の口から入れる';
+    if (mv.kind === 'remove') return mv.id + ' をいったん盤の外に出す';
+    const dirJa = { '→': '右', '←': '左', '↑': '上', '↓': '下' };
+    return mv.id + ' を' + dirJa[mv.arrow] + 'へ動かす';
+  }
+
+  hintBtn.addEventListener('click', () => {
+    if (finished || animating) return;
+    const res = solveFrom(puzzle.pieces, state);
+    if (!res.solvable) {
+      msg('この局面からは完成できません…。「やりなおす」で最初から!', 'bad');
+      return;
+    }
+    if (res.moves.length === 0) return;
+    hintsUsed++;
+    const mv = res.moves[0];
+    msg('ヒント: ' + describeMove(mv) + '(完成まであと最短 ' + res.moves.length + ' 手)');
+    const node = pieceNodes.get(mv.piece);
+    if (node) {
+      node.classList.remove('hintflash');
+      void node.offsetWidth;
+      node.classList.add('hintflash');
+    } else {
+      selected = mv.piece;
+      refresh();
+    }
+  });
+
+  function resetPuzzle() {
+    state = puzzle.pieces.map(() => 0);
+    selected = -1;
+    moveCount = 0; lastActed = -1; hintsUsed = 0;
+    finished = false; animating = false;
+    holder.classList.remove('celebrate');
+    updateMoves();
+    msg('');
+    refresh();
+  }
+
+  resetBtn.addEventListener('click', () => { if (!animating) resetPuzzle(); });
+
+  revealBtn.addEventListener('click', () => {
+    if (animating) return;
+    resetPuzzle();
+    const res = solveFrom(puzzle.pieces, state);
+    if (!res.solvable) return;
+    finished = true;
+    animating = true;
+    let k = 0;
+    const timer = setInterval(() => {
+      if (k >= res.moves.length) {
+        clearInterval(timer);
+        animating = false;
+        msg('お手本でした(' + res.moves.length + ' 手)。「やりなおす」で自分でも挑戦!');
+        updateDock();
+        return;
+      }
+      const mv = res.moves[k];
+      state = applyMove(state, mv);
+      msg((k + 1) + ' 手目: ' + describeMove(mv));
+      refresh();
+      k++;
+    }, 750);
+  });
+
+  //---- 出題 ----
+  function newPuzzle() {
+    if (animating) return;
+    const pool = CHALLENGES.filter(LEVELS[level].filter);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const goal = decodeChallenge(pick.g);
+    const ids = Object.keys(goal).sort();
+    const pieces = ids.map((id) => buildPlacedPiece(id, goal[id]));
+    puzzle = {
+      g: pick.g,
+      goal,
+      pieces,
+      byId: Object.fromEntries(pieces.map((pc) => [pc.id, pc])),
+      optimal: pick.n,
+    };
+    lvBadge.textContent = LEVELS[level].label;
+    optBadge.textContent = '最短 ' + pick.n + ' 手';
+    buildBoard();
+    renderGoalGrid();
+    resetPuzzle();
+  }
+
+  newBtn.addEventListener('click', newPuzzle);
+  mvNeg.addEventListener('click', () => step(-1));
+  mvPos.addEventListener('click', () => step(+1));
+  mvOut.addEventListener('click', takeOut);
+
+  document.addEventListener('keydown', (e) => {
+    if (selected < 0 || state[selected] === 0 || finished || animating) {
+      if (e.key === 'Escape') { selected = -1; refresh(); }
+      return;
+    }
+    const pc = puzzle.pieces[selected];
+    const neg = pc.axis === 'h' ? 'ArrowLeft' : 'ArrowUp';
+    const pos = pc.axis === 'h' ? 'ArrowRight' : 'ArrowDown';
+    if (e.key === neg) { e.preventDefault(); step(-1); }
+    else if (e.key === pos) { e.preventDefault(); step(+1); }
+    else if (e.key === 'Escape') { selected = -1; refresh(); }
+  });
+
+  document.querySelectorAll('.seg button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (animating) return;
+      document.querySelectorAll('.seg button').forEach((b) =>
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+      level = btn.dataset.level;
+      newPuzzle();
+    });
+  });
+
+  updateScore();
+  newPuzzle();
+})();
+</script>
+</body>
+</html>
