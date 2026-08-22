@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>本物の倉庫番で 2^N 手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #edefe9; --surface: #f7f8f4; --surface2: #e4e7de;
+  --ink: #20261f; --muted: #5c665b; --line: #c9cfc2;
+  --accent: #2e6b4c; --accent-soft: #dce9e0; --on-accent: #f2f7f0;
+  --wood: #b3762f; --wood-edge: #7c4c1c; --lock: #b13f2b; --lock-soft: #f0ded9;
+  --floor: #e8eae1; --floor-line: #d2d7c8; --wallc: #7b8577; --wallc2: #6a7367;
+  --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141815; --surface: #1b201c; --surface2: #232923;
+    --ink: #e4e8e0; --muted: #97a094; --line: #343c34;
+    --accent: #63ba8d; --accent-soft: #21362b; --on-accent: #10231a;
+    --wood: #c98e4a; --wood-edge: #8a5a24; --lock: #e0715a; --lock-soft: #3a241f;
+    --floor: #262c25; --floor-line: #333a31; --wallc: #3c453c; --wallc2: #333b33;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141815; --surface: #1b201c; --surface2: #232923;
+  --ink: #e4e8e0; --muted: #97a094; --line: #343c34;
+  --accent: #63ba8d; --accent-soft: #21362b; --on-accent: #10231a;
+  --wood: #c98e4a; --wood-edge: #8a5a24; --lock: #e0715a; --lock-soft: #3a241f;
+  --floor: #262c25; --floor-line: #333a31; --wallc: #3c453c; --wallc2: #333b33;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  font-size: 15.5px; line-height: 1.95; font-feature-settings: "palt"; }
+.wrap { max-width: 960px; margin-inline: auto; padding: clamp(24px,5vw,56px) clamp(16px,4vw,40px) 80px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .18em; color: var(--accent); margin: 0 0 10px; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px,6vw,44px); line-height: 1.3; margin: 0 0 16px; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.4; margin: 0 0 14px; text-wrap: balance; }
+section { margin-top: 64px; }
+section > .eyebrow { color: var(--muted); }
+p { max-width: 41em; margin: 0 0 1em; }
+.note { font-size: 13.5px; color: var(--muted); }
+code, .mono { font-family: var(--font-mono); font-size: .92em; }
+sup { font-size: .72em; }
+a { color: var(--accent); }
+.thesis { max-width: 41em; color: var(--muted); margin: 0; }
+.thesis strong { color: var(--ink); font-weight: 700; }
+
+.game { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: clamp(14px,3vw,24px); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.tabs button { font-family: var(--font-body); font-weight: 700; font-size: 13.5px; padding: 6px 14px;
+  border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.gamebar { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; margin-bottom: 12px; }
+.stat { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stat b { color: var(--ink); font-size: 16px; }
+.btn { font-family: var(--font-body); font-weight: 500; font-size: 13.5px; padding: 6px 14px;
+  border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.boardbox { overflow-x: auto; padding: 4px 0; }
+canvas.board { display: block; margin: 0 auto; image-rendering: pixelated; touch-action: none; }
+.winbar { margin-top: 12px; padding: 9px 14px; border-radius: 4px; background: var(--accent-soft);
+  color: var(--accent); font-weight: 700; display: none; }
+.winbar.show { display: block; }
+.keyhelp { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.padctl { display: none; gap: 6px; margin-top: 12px; justify-content: center; }
+.padctl button { width: 52px; height: 44px; font-size: 18px; }
+@media (pointer: coarse) { .padctl { display: flex; } }
+
+.tblwrap { overflow-x: auto; margin-top: 18px; }
+table { border-collapse: collapse; min-width: 480px; }
+th, td { text-align: right; padding: 8px 22px 8px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+th { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-weight: 500; }
+td { font-family: var(--font-mono); font-size: 14px; }
+td.l, th.l { text-align: left; padding-left: 8px; font-family: var(--font-body); }
+.badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em;
+  padding: 1px 8px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); }
+
+figure { margin: 24px 0 0; }
+figcaption { font-size: 13.5px; color: var(--muted); max-width: 44em; margin-top: 10px; line-height: 1.8; }
+.anat { position: relative; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+.refs { list-style: none; padding: 0; margin: 8px 0 0; max-width: 46em; }
+.refs li { padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.8; }
+.refs li:last-child { border-bottom: 1px solid var(--line); }
+.refs .who { font-weight: 700; }
+footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">SOKOBAN / PSPACE — 実物編</p>
+  <h1>本物の倉庫番で 2<sup>N</sup> 手</h1>
+  <p class="thesis">壁・箱・ゴール・プレイヤーだけの、正真正銘の倉庫番。部屋を N 個つないだ盤面の最短手数は
+  <strong>ちょうど 16·2<sup>N</sup> − 15 押し</strong>(N=1,2 は押し最適全数探索で厳密検証)。
+  下の盤面は実際に遊べる。矢印キーで動き、最短解の自動再生も見られる。</p>
+</header>
+
+<section id="play">
+  <p class="eyebrow">あそぶ</p>
+  <h2>検証済みレベル</h2>
+  <p>部屋(点線の反復単位)には出入口が3つある:左上の <span class="mono">A</span>、右の <span class="mono">C</span>(次の部屋へ)、下の <span class="mono">B</span>(外周廊下でスタートへ戻る)。
+  ゴールは右端の袋小路にある箱をゴールマスへ押し込むこと——ただし部屋の箱たちも最後は全員ゴール(=初期位置)に戻っていなければならない。</p>
+  <div class="game">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="gamebar">
+      <span class="stat">押し <b id="stPush">0</b><span id="stOpt"></span></span>
+      <span class="stat">移動 <b id="stMove">0</b></span>
+      <button class="btn btn-primary" id="btnSolve">最短解を再生</button>
+      <button class="btn" id="btnUndo">戻す (Z)</button>
+      <button class="btn" id="btnReset">リセット (R)</button>
+    </div>
+    <div class="boardbox"><canvas class="board" id="board" tabindex="0" aria-label="倉庫番の盤面"></canvas></div>
+    <div class="padctl">
+      <button class="btn" data-d="l">←</button>
+      <button class="btn" data-d="u">↑</button>
+      <button class="btn" data-d="d">↓</button>
+      <button class="btn" data-d="r">→</button>
+    </div>
+    <div class="winbar" id="winbar"></div>
+    <p class="keyhelp">操作:矢印キー / WASD。Z で1手戻す、R でリセット。盤面をクリックしてからキー入力。</p>
+  </div>
+</section>
+
+<section id="law">
+  <p class="eyebrow">倍々の法則</p>
+  <h2>部屋をひとつ足すと、手数はほぼ倍になる</h2>
+  <p>各盤面の最短押し手数を、押し最適の全数探索ソルバー(到達可能な盤面状態をすべて列挙)で求めた。
+  見つかった最短解はすべて逐一リプレイして合法性を機械検証している。</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>部屋数 N</th><th>最短押し手数</th><th>16·2ᴺ−15</th><th>移動数(参考)</th><th class="l">検証</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>17</td><td>17</td><td>161</td><td class="l"><span class="badge">全数探索+リプレイ ✓</span></td></tr>
+        <tr><td>2</td><td>49</td><td>49</td><td>486</td><td class="l"><span class="badge">全数探索+リプレイ ✓</span></td></tr>
+        <tr><td>3</td><td id="n3cell">—</td><td>113</td><td>—</td><td class="l" id="n3badge"><span class="badge">探索実行中</span></td></tr>
+        <tr><td>10</td><td>—</td><td>16,369</td><td>—</td><td class="l">式による外挿</td></tr>
+        <tr><td>20</td><td>—</td><td>16,777,201</td><td>—</td><td class="l">式による外挿</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-top:18px">なぜ倍になるのか。部屋には見えない「状態」が 0/1 の2値ある。
+  <b>A→C の通り抜けは状態1のときだけ可能で、通り抜けると状態は必ず0に戻る</b>。
+  状態を1にするには A→B の旅(下の一方通行をくぐって外周廊下へ)が必要になる。
+  つまり部屋 k の先へ1回進むたびに、部屋 k を「準備の旅」と「通過の旅」で2回ずつ訪れることになり、
+  この2倍が部屋の数だけ入れ子になる——スタート地点には合計 2<sup>N</sup> 回戻ってくるしかない。</p>
+</section>
+
+<section id="anatomy">
+  <p class="eyebrow">部屋の解剖</p>
+  <h2>状態機械としての部屋</h2>
+  <figure class="anat">
+    <div class="boardbox"><canvas class="board" id="anatCanvas" aria-label="部屋の構造図"></canvas></div>
+    <div class="legend">
+      <span><span class="sw" style="background:#c9a1478f"></span>一方通行装置(×4)— 箱を押して通り、押し戻して復元。逆走は箱が戻せなくなり詰む</span>
+      <span><span class="sw" style="background:#4f8fbf80"></span>通行ペア — A→C 路を塞ぐ2箱。状態0で押すと2箱が密着して即詰み</span>
+      <span><span class="sw" style="background:#b3402e70"></span>リバーサ — 通るたびに通行可能な向きが反転する2箱</span>
+    </div>
+    <figcaption>反復単位となる部屋(12×16マス、箱8個、すべてゴール上からスタート)。
+    J. Potma の学位論文(2018)の部屋を図から復元した。緑の A/C/B が3つの出入口。
+    どの装置も「箱は押せるが引けない」という倉庫番の非可逆性だけで作られている。</figcaption>
+  </figure>
+  <p style="margin-top:20px">動作はこうだ。<b>状態0(初期)</b>:A から右へ進むと一方通行①を抜けて通行ペアの左側に出るが、
+  箱を押せば2箱が密着して二度と剥がせない(=詰み)。よって進めるのは下の J2 経由の B 方向だけ。
+  その途中でリバーサを回り込み、通行ペアの右の箱を1マス動かして<b>状態1</b>にしてから B で退出できる。
+  <b>状態1</b>:今度は A→ペアの隙間→C と通り抜けられるが、通過の過程で箱をゴールへ押し戻すことになり、
+  部屋は必ず状態0へリセットされる。この「使うたびに閉まるドア」が再帰の心臓部になる。</p>
+</section>
+
+<section id="history">
+  <p class="eyebrow">系譜と検証</p>
+  <h2>Hoffman の部屋から、機械検証つきの証明へ</h2>
+  <p>この構成の原型は、Erich Friedman の連載 Math Magic(2000年3月号)に投稿された John Hoffman のアイデアで、
+  「n マスの倉庫番の最長手数 L(n) は 2<sup>n/74</sup> 以上」という指数下界の根拠になった。
+  ただし当時は厳密な証明がなかった。J. Potma の学位論文(Radboud 大学, 2018)は部屋を改良したうえで、
+  プレイヤーの動きをマクロ遷移系に抽象化し、<b>部屋の2状態性をモデル検査(NuSMV)で、
+  全体の下界(スタートを 2<sup>N</sup> 回訪れる)を帰納法で</b>証明した。上のレベルはその論文の部屋を組んだものだ。</p>
+  <p>おまけの発見をひとつ。Math Magic 掲載版の部屋(下のおまけタブ)をタイル画像から復元して
+  ソルバーにかけたところ、<b>意図された二重訪問をせずに7押しで突破できる迂回路</b>が見つかった。
+  部屋の左側の縦通路から2つの箱を一時的にずらして戻せてしまうのが原因で、
+  「あとで直せる程度の乱し方」を許すと指数の強制が壊れる、という好例になっている。
+  論文が部屋に一方通行と曲がり通路を追加して証明を付け直した理由がよく分かる。</p>
+  <p class="note">検証の内訳:本ページの各レベルは(1)押し最適 BFS(死にマス・凍結・角詰みなどの健全な枝刈りつき)で最短値を確定し、
+  (2)得られた解を独立のリプレイ器で1手ずつ検証した。途中で使った双方向探索器は小盤面のクロスチェックで不健全と判明したため破棄し、
+  すべて順方向探索で取り直している。</p>
+  <ul class="refs">
+    <li><span class="who">E. Friedman</span> — Math Magic “Problem of the Month” (March 2000)。Hoffman の部屋と L(n) ≥ 2<sup>n/74</sup> の記事。</li>
+    <li><span class="who">J. Potma</span> — <a href="https://www.cs.ru.nl/bachelors-theses/2018/Jan_Potma___4476360___An_exponential_construction_for_Sokoban.pdf">“An exponential construction for Sokoban”</a>, Radboud University bachelor thesis (2018)。本ページの部屋と 2<sup>N</sup> 下界の証明。</li>
+    <li><span class="who">J. Culberson</span> — “Sokoban is PSPACE-complete” (1997)。一方通行・リバーサ・パスリセット装置の原典。</li>
+    <li><span class="who">姉妹ページ</span> — <a id="siblink" href="./">指数手数の倉庫番(抽象機械編)</a>。グレイ符号型の抽象モデルを触って確かめる。</li>
+  </ul>
+</section>
+
+<footer>本物の倉庫番で 2ᴺ 手 — Hoffman–Potma 構成の実装と全数探索による検証。</footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // ---------- level data (machine-verified) ----------
+  var LV1 = [
+    '###################',
+    '###########   #####',
+    '#####   ## *  #####',
+    '#### *  ## # ######',
+    '#@   # ### #    $.#',
+    '# ## # * *  #######',
+    '# ##  #   # #######',
+    '# ### #     #######',
+    '# ## *#### #  #####',
+    '# ##    ##  * #####',
+    '# ##  #   ##  #####',
+    '# ####  # ##* #####',
+    '# ### *##     #####',
+    '# ###    ###  #####',
+    '# ###  # ##########',
+    '# ###### ##########',
+    '#        ##########',
+    '###################'
+  ];
+  var SOL1 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
+  var LV2 = [
+    '##############################',
+    '###########   ########   #####',
+    '#####   ## *  ##   ## *  #####',
+    '#### *  ## # ## *  ## # ######',
+    '#@   # ### #    # ### #    $.#',
+    '# ## # * *  ### # * *  #######',
+    '# ##  #   # ###  #   # #######',
+    '# ### #     #### #     #######',
+    '# ## *#### #  # *#### #  #####',
+    '# ##    ##  * #    ##  * #####',
+    '# ##  #   ##  #  #   ##  #####',
+    '# ####  # ##* ###  # ##* #####',
+    '# ### *##     ## *##     #####',
+    '# ###    ###  ##    ###  #####',
+    '# ###  # #######  # ##########',
+    '# ###### ########## ##########',
+    '#                   ##########',
+    '##############################'
+  ];
+  var SOL2 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
+  var LVH = [
+    '#########  #########',
+    '#.$     #  #      @#',
+    '####### #### ##### #',
+    '######  * *  #  ## #',
+    '######     # #  ## #',
+    '########## # #  ## #',
+    '######   # # #  ## #',
+    '###### #*  # ## ## #',
+    '######   ###* # ## #',
+    '######  *#    # ## #',
+    '###### #   #  # ## #',
+    '######   # ####### #',
+    '########## #   ### #',
+    '#####    #  *  ### #',
+    '############# #### #',
+    '#####              #',
+    '####################'
+  ];
+  var SOLH = 'llllllddddddDrddlUlldlldlluuurrDulluurrDrruuullluuullllLrrrrrdddrrrdddllulldddrrUdllddrrU';
+  var LEVELS = [
+    { name: 'N = 1(最短17手)', grid: LV1, sol: SOL1, opt: 17 },
+    { name: 'N = 2(最短49手)', grid: LV2, sol: SOL2, opt: 49 },
+    { name: 'おまけ:掲載版の部屋(7手で穴)', grid: LVH, sol: SOLH, opt: 7 }
+  ];
+
+  // Potma room for the anatomy figure
+  var ROOM = [
+    '############',
+    '########   #',
+    '##   ## $  #',
+    '# $  ## # ##',
+    '  # ### #   ',
+    '# # $ $  ###',
+    '#  #   # ###',
+    '## #     ###',
+    '# $#### #  #',
+    '#    ##  $ #',
+    '#  #   ##  #',
+    '###  # ##$ #',
+    '## $##     #',
+    '##    ###  #',
+    '##  # ######',
+    '##### ######'
+  ];
+
+  // ---------- rendering ----------
+  var css = getComputedStyle(document.documentElement);
+  function col(name) { return css.getPropertyValue(name).trim(); }
+  function drawBoard(cv, state, cell) {
+    var W = state.W, H = state.H;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = W * cell * dpr; cv.height = H * cell * dpr;
+    cv.style.width = (W * cell) + 'px'; cv.style.height = (H * cell) + 'px';
+    var g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    css = getComputedStyle(document.documentElement);
+    var floor = col('--floor'), fline = col('--floor-line'), wall = col('--wallc'),
+        wall2 = col('--wallc2'), accent = col('--accent'), wood = col('--wood'),
+        woodEdge = col('--wood-edge'), bg = col('--bg');
+    g.fillStyle = bg; g.fillRect(0, 0, W * cell, H * cell);
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      var px = x * cell, py = y * cell;
+      var isWall = state.wall[y][x];
+      if (isWall) {
+        g.fillStyle = wall; g.fillRect(px, py, cell, cell);
+        g.fillStyle = wall2;
+        g.fillRect(px, py + cell - 3, cell, 3);
+        continue;
+      }
+      g.fillStyle = floor; g.fillRect(px, py, cell, cell);
+      g.strokeStyle = fline; g.lineWidth = 1;
+      g.strokeRect(px + .5, py + .5, cell - 1, cell - 1);
+      if (state.goal[y][x]) {
+        g.save();
+        g.translate(px + cell / 2, py + cell / 2);
+        g.rotate(Math.PI / 4);
+        g.strokeStyle = accent; g.lineWidth = 2;
+        var s = cell * .18;
+        g.strokeRect(-s, -s, 2 * s, 2 * s);
+        g.restore();
+      }
+    }
+    // boxes
+    state.boxes.forEach(function (b) {
+      var px = b[0] * cell, py = b[1] * cell, m = Math.max(2, cell * .1);
+      g.fillStyle = wood;
+      g.strokeStyle = state.goal[b[1]][b[0]] ? accent : woodEdge;
+      g.lineWidth = 2;
+      g.fillRect(px + m, py + m, cell - 2 * m, cell - 2 * m);
+      g.strokeRect(px + m + 1, py + m + 1, cell - 2 * m - 2, cell - 2 * m - 2);
+      g.strokeStyle = woodEdge; g.lineWidth = 1.4;
+      g.beginPath();
+      g.moveTo(px + m + 2, py + m + 2); g.lineTo(px + cell - m - 2, py + cell - m - 2);
+      g.moveTo(px + cell - m - 2, py + m + 2); g.lineTo(px + m + 2, py + cell - m - 2);
+      g.stroke();
+    });
+    // player
+    var p = state.player;
+    g.fillStyle = accent;
+    g.beginPath();
+    g.arc(p[0] * cell + cell / 2, p[1] * cell + cell / 2, cell * .3, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = col('--on-accent');
+    g.beginPath();
+    g.arc(p[0] * cell + cell / 2, p[1] * cell + cell / 2 - cell * .07, cell * .09, 0, Math.PI * 2);
+    g.fill();
+  }
+
+  // ---------- game state ----------
+  function parseLevel(rows) {
+    var H = rows.length, W = 0, y, x;
+    for (y = 0; y < H; y++) W = Math.max(W, rows[y].length);
+    var wall = [], goal = [], boxes = [], player = null;
+    for (y = 0; y < H; y++) {
+      wall.push([]); goal.push([]);
+      for (x = 0; x < W; x++) {
+        var c = rows[y][x] || '#';
+        wall[y][x] = (c === '#');
+        goal[y][x] = (c === '.' || c === '*' || c === '+');
+        if (c === '$' || c === '*') boxes.push([x, y]);
+        if (c === '@' || c === '+') player = [x, y];
+      }
+    }
+    return { W: W, H: H, wall: wall, goal: goal, boxes: boxes, player: player, pushes: 0, moves: 0, undo: [] };
+  }
+  var DIRS = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] };
+  function boxAt(st, x, y) {
+    for (var i = 0; i < st.boxes.length; i++) if (st.boxes[i][0] === x && st.boxes[i][1] === y) return i;
+    return -1;
+  }
+  function tryMove(st, d) {
+    var v = DIRS[d];
+    var nx = st.player[0] + v[0], ny = st.player[1] + v[1];
+    if (st.wall[ny][nx]) return false;
+    var bi = boxAt(st, nx, ny);
+    if (bi >= 0) {
+      var bx = nx + v[0], by = ny + v[1];
+      if (st.wall[by][bx] || boxAt(st, bx, by) >= 0) return false;
+      st.undo.push({ p: st.player.slice(), b: bi, from: st.boxes[bi].slice() });
+      st.boxes[bi] = [bx, by];
+      st.player = [nx, ny];
+      st.pushes++; st.moves++;
+      return true;
+    }
+    st.undo.push({ p: st.player.slice(), b: -1 });
+    st.player = [nx, ny];
+    st.moves++;
+    return true;
+  }
+  function undoMove(st) {
+    var u = st.undo.pop();
+    if (!u) return;
+    if (u.b >= 0) { st.boxes[u.b] = u.from; st.pushes--; }
+    st.player = u.p;
+    st.moves--;
+  }
+  function isSolved(st) {
+    return st.boxes.every(function (b) { return st.goal[b[1]][b[0]]; });
+  }
+
+  // ---------- UI wiring ----------
+  var cur = 0, state = null, autoTimer = null, autoPos = 0;
+  var cv = document.getElementById('board');
+  var stPush = document.getElementById('stPush'), stMove = document.getElementById('stMove'),
+      stOpt = document.getElementById('stOpt'), winbar = document.getElementById('winbar');
+  function cellSize() {
+    var maxw = Math.min(880, document.querySelector('.game').clientWidth - 20);
+    return Math.max(14, Math.min(34, Math.floor(maxw / state.W)));
+  }
+  function refresh() {
+    drawBoard(cv, state, cellSize());
+    stPush.textContent = state.pushes;
+    stMove.textContent = state.moves;
+    stOpt.textContent = ' / 最短 ' + LEVELS[cur].opt;
+    if (isSolved(state)) {
+      winbar.textContent = state.pushes === LEVELS[cur].opt
+        ? 'クリア!' + state.pushes + ' 押し — 最短手数と一致。'
+        : 'クリア!' + state.pushes + ' 押し(最短は ' + LEVELS[cur].opt + ' 押し)。';
+      winbar.classList.add('show');
+    } else winbar.classList.remove('show');
+  }
+  function load(i) {
+    stopAuto();
+    cur = i;
+    state = parseLevel(LEVELS[i].grid);
+    document.querySelectorAll('#tabs button').forEach(function (b, j) {
+      b.setAttribute('aria-pressed', String(j === i));
+    });
+    refresh();
+  }
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    document.getElementById('btnSolve').textContent = '最短解を再生';
+  }
+  function startAuto() {
+    load(cur);
+    var sol = LEVELS[cur].sol;
+    autoPos = 0;
+    document.getElementById('btnSolve').textContent = '停止';
+    autoTimer = setInterval(function () {
+      if (autoPos >= sol.length) { stopAuto(); return; }
+      tryMove(state, sol[autoPos].toLowerCase());
+      autoPos++;
+      refresh();
+    }, 90);
+  }
+  var tabs = document.getElementById('tabs');
+  LEVELS.forEach(function (lv, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = lv.name; b.setAttribute('role', 'tab');
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function () { load(i); });
+    tabs.appendChild(b);
+  });
+  document.getElementById('btnSolve').addEventListener('click', function () {
+    autoTimer ? stopAuto() : startAuto();
+  });
+  document.getElementById('btnUndo').addEventListener('click', function () { stopAuto(); undoMove(state); refresh(); });
+  document.getElementById('btnReset').addEventListener('click', function () { load(cur); });
+  var KEYS = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', w: 'u', s: 'd', a: 'l', d: 'r' };
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    var k = KEYS[e.key];
+    if (k) {
+      if (document.activeElement !== cv && !cv.contains(document.activeElement)) {
+        var r = cv.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight) return;   // board off-screen: don't hijack
+      }
+      e.preventDefault(); stopAuto(); tryMove(state, k); refresh();
+    } else if (e.key === 'z' || e.key === 'Z') { stopAuto(); undoMove(state); refresh(); }
+    else if (e.key === 'r' || e.key === 'R') { load(cur); }
+  });
+  document.querySelectorAll('.padctl button').forEach(function (b) {
+    b.addEventListener('click', function () { stopAuto(); tryMove(state, b.dataset.d); refresh(); });
+  });
+  window.addEventListener('resize', function () { if (state) refresh(); });
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) mq.addEventListener('change', function () { refresh(); drawAnatomy(); });
+
+  load(0);
+
+  // ---------- anatomy figure ----------
+  function drawAnatomy() {
+    var acv = document.getElementById('anatCanvas');
+    var st = parseLevel(ROOM.map(function (r) { return r.replace(/\$/g, '*'); }));
+    st.player = [-99, -99];
+    var cell = Math.max(18, Math.min(30, Math.floor((Math.min(560, document.querySelector('.wrap').clientWidth - 40)) / 12)));
+    drawBoard(acv, st, cell);
+    var g = acv.getContext('2d');
+    function zone(x, y, w, h, color) {
+      g.fillStyle = color;
+      g.fillRect(x * cell + 2, y * cell + 2, w * cell - 4, h * cell - 4);
+    }
+    var ow = 'rgba(201,161,71,0.42)', pp = 'rgba(79,143,191,0.38)', rv = 'rgba(179,64,46,0.33)';
+    zone(1, 2, 4, 3, ow);   // one-way 1 (right of J1)
+    zone(7, 1, 4, 2, ow);   // one-way 2 (exit C)
+    zone(1, 7, 3, 3, ow);   // one-way 3 (J2 path)
+    zone(2, 11, 3, 3, ow);  // one-way 4 (exit B)
+    zone(3, 4, 6, 2, pp);   // pass pair
+    zone(8, 8, 3, 5, rv);   // reverser
+    g.font = '700 ' + Math.round(cell * .62) + 'px "Shippori Mincho B1", serif';
+    g.fillStyle = col('--accent');
+    g.fillText('A', 0.22 * cell, 4.75 * cell);
+    g.fillText('C', 10.4 * cell, 4.75 * cell);
+    g.fillText('B', 5.24 * cell, 15.78 * cell);
+  }
+  drawAnatomy();
+  window.addEventListener('resize', drawAnatomy);
+})();
+</script>
+</body>
+</html>
