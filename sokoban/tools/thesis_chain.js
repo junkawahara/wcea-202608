@@ -37,8 +37,11 @@ function build(N) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (g[y][x] === '$' && !(y === 4 && x === xe + 2)) g[y][x] = '*';
   return g.map(r => r.join('')).join('\n');
 }
-const N = Number(process.argv[2] || 1);
-const t = build(N);
-const out = process.argv[3];
-if (out) { fs.writeFileSync(out, t); console.error('wrote ' + out); }
-else console.log(t);
+module.exports = { build };
+if (require.main === module) {
+  const N = Number(process.argv[2] || 1);
+  const t = build(N);
+  const out = process.argv[3];
+  if (out) { fs.writeFileSync(out, t); console.error('wrote ' + out); }
+  else console.log(t);
+}

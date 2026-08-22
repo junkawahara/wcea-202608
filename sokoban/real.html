@@ -104,8 +104,9 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
   <p class="eyebrow">SOKOBAN / PSPACE — 実物編</p>
   <h1>本物の倉庫番で 2<sup>N</sup> 手</h1>
   <p class="thesis">壁・箱・ゴール・プレイヤーだけの、正真正銘の倉庫番。部屋を N 個つないだ盤面の最短手数は
-  <strong>ちょうど 16·2<sup>N</sup> − 15 押し</strong>(N=1,2 は押し最適全数探索で厳密検証)。
-  下の盤面は実際に遊べる。矢印キーで動き、最短解の自動再生も見られる。</p>
+  <strong>ちょうど 16·2<sup>N</sup> − 15 押し</strong>(N=1,2 は押し最適全数探索で厳密検証。
+  N=3,4 は構成どおりの解 113手・241手を機械検証して収録)。
+  下の盤面は実際に遊べる。矢印キーで動き、解の自動再生も見られる。</p>
 </header>
 
 <section id="play">
@@ -119,6 +120,7 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
       <span class="stat">押し <b id="stPush">0</b><span id="stOpt"></span></span>
       <span class="stat">移動 <b id="stMove">0</b></span>
       <button class="btn btn-primary" id="btnSolve">最短解を再生</button>
+      <button class="btn" id="btnSpeed" title="再生速度">▶ ×1</button>
       <button class="btn" id="btnUndo">戻す (Z)</button>
       <button class="btn" id="btnReset">リセット (R)</button>
     </div>
@@ -137,15 +139,20 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
 <section id="law">
   <p class="eyebrow">倍々の法則</p>
   <h2>部屋をひとつ足すと、手数はほぼ倍になる</h2>
-  <p>各盤面の最短押し手数を、押し最適の全数探索ソルバー(到達可能な盤面状態をすべて列挙)で求めた。
-  見つかった最短解はすべて逐一リプレイして合法性を機械検証している。</p>
+  <p>N=1,2 の最短押し手数は、押し最適の全数探索ソルバー(到達可能な盤面状態をすべて列挙)で確定した。
+  N=3 になると状態数が約1,670万件の上限を超えて全数探索は打ち切りになる——盤面が指数的に手ごわくなることの傍証でもある。
+  そこで N=3,4 は、<b>検証済みの N=2 最短解から部屋ごとの操作(セット11押し/クリア5押し)をテンプレートとして抽出し、
+  部屋の周期ぶん平行移動して合成した「構成どおりの解」</b>を収録した。この合成法を N=2 に適用すると
+  全数探索が見つけた最短解を一字一句再現する。合成解も独立のリプレイ器で1手ずつ機械検証済みで、
+  値 16·2<sup>N</sup>−15 は N≥3 では上界として確定・最短と予想される。</p>
   <div class="tblwrap">
     <table>
       <thead><tr><th>部屋数 N</th><th>最短押し手数</th><th>16·2ᴺ−15</th><th>移動数(参考)</th><th class="l">検証</th></tr></thead>
       <tbody>
         <tr><td>1</td><td>17</td><td>17</td><td>161</td><td class="l"><span class="badge">全数探索+リプレイ ✓</span></td></tr>
         <tr><td>2</td><td>49</td><td>49</td><td>486</td><td class="l"><span class="badge">全数探索+リプレイ ✓</span></td></tr>
-        <tr><td>3</td><td id="n3cell">—</td><td>113</td><td>—</td><td class="l" id="n3badge"><span class="badge">探索実行中</span></td></tr>
+        <tr><td>3</td><td>≤ 113</td><td>113</td><td>1,147</td><td class="l"><span class="badge">構成解+リプレイ ✓</span></td></tr>
+        <tr><td>4</td><td>≤ 241</td><td>241</td><td>2,480</td><td class="l"><span class="badge">構成解+リプレイ ✓</span></td></tr>
         <tr><td>10</td><td>—</td><td>16,369</td><td>—</td><td class="l">式による外挿</td></tr>
         <tr><td>20</td><td>—</td><td>16,777,201</td><td>—</td><td class="l">式による外挿</td></tr>
       </tbody>
@@ -192,9 +199,10 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
   部屋の左側の縦通路から2つの箱を一時的にずらして戻せてしまうのが原因で、
   「あとで直せる程度の乱し方」を許すと指数の強制が壊れる、という好例になっている。
   論文が部屋に一方通行と曲がり通路を追加して証明を付け直した理由がよく分かる。</p>
-  <p class="note">検証の内訳:本ページの各レベルは(1)押し最適 BFS(死にマス・凍結・角詰みなどの健全な枝刈りつき)で最短値を確定し、
+  <p class="note">検証の内訳:N=1,2 は(1)押し最適 BFS(死にマス・凍結・角詰みなどの健全な枝刈りつき)で最短値を確定し、
   (2)得られた解を独立のリプレイ器で1手ずつ検証した。途中で使った双方向探索器は小盤面のクロスチェックで不健全と判明したため破棄し、
-  すべて順方向探索で取り直している。</p>
+  すべて順方向探索で取り直している。N=3,4 の解は N=2 最短解から部屋テンプレート(セット11押し/クリア5押し)を抽出して合成したもので、
+  同じリプレイ器で検証済み(この合成は N=2 では全数探索の最短解を一字一句再現する)。最短性の証明は N≥3 では未達で、16·2<sup>N</sup>−15 は上界。</p>
   <ul class="refs">
     <li><span class="who">E. Friedman</span> — Math Magic “Problem of the Month” (March 2000)。Hoffman の部屋と L(n) ≥ 2<sup>n/74</sup> の記事。</li>
     <li><span class="who">J. Potma</span> — <a href="https://www.cs.ru.nl/bachelors-theses/2018/Jan_Potma___4476360___An_exponential_construction_for_Sokoban.pdf">“An exponential construction for Sokoban”</a>, Radboud University bachelor thesis (2018)。本ページの部屋と 2<sup>N</sup> 下界の証明。</li>
@@ -253,6 +261,48 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
     '##############################'
   ];
   var SOL2 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
+  var LV3 = [
+    '#########################################',
+    '###########   ########   ########   #####',
+    '#####   ## *  ##   ## *  ##   ## *  #####',
+    '#### *  ## # ## *  ## # ## *  ## # ######',
+    '#@   # ### #    # ### #    # ### #    $.#',
+    '# ## # * *  ### # * *  ### # * *  #######',
+    '# ##  #   # ###  #   # ###  #   # #######',
+    '# ### #     #### #     #### #     #######',
+    '# ## *#### #  # *#### #  # *#### #  #####',
+    '# ##    ##  * #    ##  * #    ##  * #####',
+    '# ##  #   ##  #  #   ##  #  #   ##  #####',
+    '# ####  # ##* ###  # ##* ###  # ##* #####',
+    '# ### *##     ## *##     ## *##     #####',
+    '# ###    ###  ##    ###  ##    ###  #####',
+    '# ###  # #######  # #######  # ##########',
+    '# ###### ########## ########## ##########',
+    '#                              ##########',
+    '#########################################'
+  ];
+  var SOL3 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
+  var LV4 = [
+    '####################################################',
+    '###########   ########   ########   ########   #####',
+    '#####   ## *  ##   ## *  ##   ## *  ##   ## *  #####',
+    '#### *  ## # ## *  ## # ## *  ## # ## *  ## # ######',
+    '#@   # ### #    # ### #    # ### #    # ### #    $.#',
+    '# ## # * *  ### # * *  ### # * *  ### # * *  #######',
+    '# ##  #   # ###  #   # ###  #   # ###  #   # #######',
+    '# ### #     #### #     #### #     #### #     #######',
+    '# ## *#### #  # *#### #  # *#### #  # *#### #  #####',
+    '# ##    ##  * #    ##  * #    ##  * #    ##  * #####',
+    '# ##  #   ##  #  #   ##  #  #   ##  #  #   ##  #####',
+    '# ####  # ##* ###  # ##* ###  # ##* ###  # ##* #####',
+    '# ### *##     ## *##     ## *##     ## *##     #####',
+    '# ###    ###  ##    ###  ##    ###  ##    ###  #####',
+    '# ###  # #######  # #######  # #######  # ##########',
+    '# ###### ########## ########## ########## ##########',
+    '#                                         ##########',
+    '####################################################'
+  ];
+  var SOL4 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
   var LVH = [
     '#########  #########',
     '#.$     #  #      @#',
@@ -274,9 +324,11 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
   ];
   var SOLH = 'llllllddddddDrddlUlldlldlluuurrDulluurrDrruuullluuullllLrrrrrdddrrrdddllulldddrrUdllddrrU';
   var LEVELS = [
-    { name: 'N = 1(最短17手)', grid: LV1, sol: SOL1, opt: 17 },
-    { name: 'N = 2(最短49手)', grid: LV2, sol: SOL2, opt: 49 },
-    { name: 'おまけ:掲載版の部屋(7手で穴)', grid: LVH, sol: SOLH, opt: 7 }
+    { name: 'N = 1(最短17手)', grid: LV1, sol: SOL1, opt: 17, exact: true },
+    { name: 'N = 2(最短49手)', grid: LV2, sol: SOL2, opt: 49, exact: true },
+    { name: 'N = 3(113手・構成解)', grid: LV3, sol: SOL3, opt: 113, exact: false },
+    { name: 'N = 4(241手・構成解)', grid: LV4, sol: SOL4, opt: 241, exact: false },
+    { name: 'おまけ:掲載版の部屋(7手で穴)', grid: LVH, sol: SOLH, opt: 7, exact: true }
   ];
 
   // Potma room for the anatomy figure
@@ -427,39 +479,58 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
     drawBoard(cv, state, cellSize());
     stPush.textContent = state.pushes;
     stMove.textContent = state.moves;
-    stOpt.textContent = ' / 最短 ' + LEVELS[cur].opt;
+    var opt = LEVELS[cur].opt, exact = LEVELS[cur].exact;
+    stOpt.textContent = (exact ? ' / 最短 ' : ' / 構成解 ') + opt;
     if (isSolved(state)) {
-      winbar.textContent = state.pushes === LEVELS[cur].opt
-        ? 'クリア!' + state.pushes + ' 押し — 最短手数と一致。'
-        : 'クリア!' + state.pushes + ' 押し(最短は ' + LEVELS[cur].opt + ' 押し)。';
+      winbar.textContent = state.pushes === opt
+        ? 'クリア!' + state.pushes + ' 押し — ' + (exact ? '最短手数と一致。' : '構成どおりの解と同じ押し数。')
+        : (!exact && state.pushes < opt)
+          ? 'クリア!' + state.pushes + ' 押し — 構成解(' + opt + ' 押し)より短い!'
+          : 'クリア!' + state.pushes + ' 押し(' + (exact ? '最短' : '構成解') + 'は ' + opt + ' 押し)。';
       winbar.classList.add('show');
     } else winbar.classList.remove('show');
   }
   function load(i) {
     stopAuto();
     cur = i;
+    document.getElementById('btnSolve').textContent = LEVELS[i].exact ? '最短解を再生' : '構成解を再生';
     state = parseLevel(LEVELS[i].grid);
     document.querySelectorAll('#tabs button').forEach(function (b, j) {
       b.setAttribute('aria-pressed', String(j === i));
     });
     refresh();
   }
+  var speed = 1, SPEEDS = [1, 2, 4, 8];
   function stopAuto() {
     if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-    document.getElementById('btnSolve').textContent = '最短解を再生';
+    document.getElementById('btnSolve').textContent = LEVELS[cur].exact ? '最短解を再生' : '構成解を再生';
   }
-  function startAuto() {
-    load(cur);
+  function startTicker() {
     var sol = LEVELS[cur].sol;
-    autoPos = 0;
-    document.getElementById('btnSolve').textContent = '停止';
     autoTimer = setInterval(function () {
       if (autoPos >= sol.length) { stopAuto(); return; }
       tryMove(state, sol[autoPos].toLowerCase());
       autoPos++;
       refresh();
-    }, 90);
+    }, Math.max(11, Math.round(90 / speed)));
   }
+  function startAuto() {
+    load(cur);
+    autoPos = 0;
+    // long replays (N>=3) default to fast-forward so the doubling is watchable
+    if (LEVELS[cur].sol.length > 600 && speed === 1) setSpeed(4);
+    document.getElementById('btnSolve').textContent = '停止';
+    startTicker();
+  }
+  var btnSpeed = document.getElementById('btnSpeed');
+  function setSpeed(s) {
+    speed = s;
+    btnSpeed.textContent = '▶ ×' + s;
+    if (autoTimer) { clearInterval(autoTimer); startTicker(); }
+  }
+  btnSpeed.addEventListener('click', function () {
+    setSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length]);
+  });
   var tabs = document.getElementById('tabs');
   LEVELS.forEach(function (lv, i) {
     var b = document.createElement('button');
