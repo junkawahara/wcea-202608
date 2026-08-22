@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>指数手数の倉庫番</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #edefe9;
+  --surface: #f7f8f4;
+  --surface2: #e4e7de;
+  --ink: #20261f;
+  --muted: #5c665b;
+  --line: #c9cfc2;
+  --accent: #2e6b4c;
+  --accent-soft: #dce9e0;
+  --on-accent: #f2f7f0;
+  --wood: #b3762f;
+  --wood-edge: #7c4c1c;
+  --wood-line: rgba(60, 30, 0, .22);
+  --lock: #b13f2b;
+  --lock-soft: #f0ded9;
+  --floor: #e8eae1;
+  --floor-line: #d2d7c8;
+  --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  --cell: 44px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141815;
+    --surface: #1b201c;
+    --surface2: #232923;
+    --ink: #e4e8e0;
+    --muted: #97a094;
+    --line: #343c34;
+    --accent: #63ba8d;
+    --accent-soft: #21362b;
+    --on-accent: #10231a;
+    --wood: #c98e4a;
+    --wood-edge: #8a5a24;
+    --wood-line: rgba(0, 0, 0, .35);
+    --lock: #e0715a;
+    --lock-soft: #3a241f;
+    --floor: #262c25;
+    --floor-line: #333a31;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141815;
+  --surface: #1b201c;
+  --surface2: #232923;
+  --ink: #e4e8e0;
+  --muted: #97a094;
+  --line: #343c34;
+  --accent: #63ba8d;
+  --accent-soft: #21362b;
+  --on-accent: #10231a;
+  --wood: #c98e4a;
+  --wood-edge: #8a5a24;
+  --wood-line: rgba(0, 0, 0, .35);
+  --lock: #e0715a;
+  --lock-soft: #3a241f;
+  --floor: #262c25;
+  --floor-line: #333a31;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.95;
+  font-feature-settings: "palt";
+}
+.wrap { max-width: 940px; margin-inline: auto; padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 40px) 80px; }
+header.masthead { margin-bottom: 40px; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(30px, 6vw, 44px);
+  line-height: 1.3;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+.thesis { max-width: 40em; color: var(--muted); margin: 0; }
+.thesis strong { color: var(--ink); font-weight: 700; }
+h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 23px;
+  line-height: 1.4;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+section { margin-top: 64px; }
+section > .eyebrow { color: var(--muted); }
+p { max-width: 40em; margin: 0 0 1em; }
+.note { font-size: 13.5px; color: var(--muted); }
+code, .mono { font-family: var(--font-mono); font-size: .92em; }
+sup { font-size: .72em; }
+
+/* ---- machine card ---- */
+.machine {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: clamp(16px, 3vw, 28px);
+}
+.machine .rule {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: none;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.machine .rule b { color: var(--ink); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 20px; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-right: 1px solid var(--line);
+}
+.seg button:last-child { border-right: none; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.ctl-label { font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+.btn {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 7px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn:disabled:hover { border-color: var(--line); filter: none; }
+input[type="range"] { accent-color: var(--accent); width: 110px; }
+button:focus-visible, .slot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- bit rows ---- */
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.bitrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 5px;
+}
+.bitrow .name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  width: 52px;
+  flex: none;
+}
+.bitrow .name small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); letter-spacing: .05em; }
+.slot {
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(2, var(--cell));
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.slot .cell {
+  width: var(--cell);
+  height: var(--cell);
+  background: var(--floor);
+  border: 1px solid var(--floor-line);
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.slot .cell .pos-label {
+  position: absolute;
+  bottom: 1px;
+  right: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  opacity: .7;
+}
+.slot .cell.goal::after {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--accent);
+  transform: rotate(45deg);
+  opacity: .65;
+}
+.crate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell);
+  height: var(--cell);
+  border: 2px solid var(--wood-edge);
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, transparent 44%, var(--wood-line) 44%, var(--wood-line) 56%, transparent 56%),
+    linear-gradient(45deg, transparent 44%, var(--wood-line) 44%, var(--wood-line) 56%, transparent 56%),
+    var(--wood);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .12);
+  transform: translateX(calc((var(--cell) + 2px) * var(--pos, 0)));
+  transition: transform .18s ease;
+}
+.crate.on-goal { border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--accent-soft); }
+.bitrow .meta { flex: 1 1 220px; min-width: 200px; }
+.chip {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 1px 9px;
+  border-radius: 3px;
+}
+.chip.free { background: var(--accent-soft); color: var(--accent); }
+.chip.locked { background: var(--lock-soft); color: var(--lock); }
+.bitrow .cond { display: block; font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 3px; }
+.bitrow .count { flex: none; text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.6; }
+.bitrow .count b { color: var(--ink); font-size: 14px; }
+.bitrow.shake { animation: shake .3s; }
+.bitrow .why { color: var(--lock); font-size: 12px; display: block; min-height: 0; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ---- status ---- */
+.status {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.stats { display: flex; flex-wrap: wrap; gap: 8px 36px; margin-bottom: 14px; }
+.stat .k { font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+.stat .v { font-family: var(--font-mono); font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 13px; color: var(--muted); font-weight: 400; }
+.track {
+  position: relative;
+  height: 12px;
+  background: var(--surface2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.track .fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--accent); transition: width .18s ease; }
+.track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.track-caption { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.banner {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  display: none;
+}
+.banner.show { display: block; }
+
+/* ---- figures ---- */
+figure { margin: 24px 0 0; }
+figure svg { max-width: 100%; height: auto; display: block; }
+.fig-scroll { overflow-x: auto; }
+.fig-scroll svg { min-width: 640px; }
+figcaption { font-size: 13.5px; color: var(--muted); max-width: 44em; margin-top: 10px; line-height: 1.8; }
+
+/* ---- table ---- */
+.tbl-wrap { overflow-x: auto; margin-top: 20px; }
+table { border-collapse: collapse; min-width: 460px; }
+th, td { text-align: right; padding: 8px 22px 8px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+th { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-weight: 500; }
+td { font-family: var(--font-mono); font-size: 14px; }
+td.time { font-family: var(--font-body); color: var(--muted); }
+tr.hot td { color: var(--lock); }
+tr.hot td.time { color: var(--lock); }
+
+/* ---- references ---- */
+.refs { list-style: none; padding: 0; margin: 8px 0 0; max-width: 44em; }
+.refs li { padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.8; }
+.refs li:last-child { border-bottom: 1px solid var(--line); }
+.refs .who { font-weight: 700; }
+
+footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .crate, .track .fill { transition: none; }
+  .bitrow.shake { animation: none; }
+}
+@media (max-width: 560px) {
+  :root { --cell: 38px; }
+  .bitrow .count { flex-basis: 100%; text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">SOKOBAN / PSPACE</p>
+  <h1>指数手数の倉庫番</h1>
+  <p class="thesis">箱をそれぞれのゴールに載せるだけの盤面。しかし壁と通路が動かせる順序を縛り、箱が <em>n</em> 個あると最短でも <strong>2<sup>n</sup> − 1 手</strong>かかる——倉庫番が PSPACE 完全であることの心臓部にある仕掛けを、触って確かめる。</p>
+</header>
+
+<section id="demo">
+  <p class="eyebrow">さわってみる</p>
+  <h2>箱の機械</h2>
+  <p>各箱は 2 マスの溝を左(<span class="mono">0</span>)と右(<span class="mono">1</span>)に行き来する。<b>箱 0 はいつでも動かせる</b>が、<b>箱 <span class="mono">k</span> は「箱 <span class="mono">k−1</span> が 1、それより下が全部 0」のときしか動かせない</b>。下位の箱が通路の扉を兼ねているからだ(実現方法は後述)。ゴールは<b>最上位の箱だけを 1 に</b>すること——◇印のマスに全箱を載せることだ。下の箱ははじめからゴールに載っている。上の箱を運ぶには、載っているものを全部いったん剥がして、また戻すしかない。</p>
+
+  <div class="machine">
+    <p class="rule">箱をクリック(またはフォーカスして Enter)で動かす。ロック中の箱をクリックすると、なぜ動かせないかが表示される。</p>
+    <div class="controls">
+      <span class="ctl-label">箱の数 n</span>
+      <div class="seg" id="nSeg" role="group" aria-label="箱の数"></div>
+      <button class="btn btn-primary" id="btnStep">次の一手</button>
+      <button class="btn" id="btnAuto">自動再生</button>
+      <button class="btn" id="btnReset">リセット</button>
+      <span class="ctl-label">速度</span>
+      <input type="range" id="speed" min="0" max="100" value="55" aria-label="自動再生の速度">
+    </div>
+    <div class="rows" id="rows"></div>
+    <div class="status">
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">手数</div><div class="v" id="stMoves">0</div></div>
+        <div class="stat"><div class="k">道のりの位置</div><div class="v"><span id="stRank">0</span> <small>/ <span id="stTotal"></span></small></div></div>
+        <div class="stat"><div class="k">最短からのロス</div><div class="v" id="stLoss">0</div></div>
+      </div>
+      <div class="track" id="track"><div class="fill" id="fill"></div></div>
+      <p class="track-caption">全 2<sup>n</sup> 配置がなす一本道の上での現在地。縦線は箱 <span class="mono">k</span> が初めて動く位置(2<sup>k</sup> 手目)——目盛りが右へ倍々に広がっていく。</p>
+      <div class="banner" id="banner"></div>
+    </div>
+  </div>
+</section>
+
+<section id="space">
+  <p class="eyebrow">配置空間</p>
+  <h2>近道は存在しない</h2>
+  <p>この機械では、どの配置でも打てる手は高々 2 つ(端の配置では 1 つ)しかない。そのため到達できる配置の全体は<b>一本の道</b>になり、その順序はちょうどグレイ符号の列と一致する。スタートとゴールは道の両端にあるから、間の 2<sup>n</sup> 個の配置をすべて通過するしかない。</p>
+  <figure>
+    <div class="fig-scroll">
+    <svg viewBox="0 0 780 132" role="img" aria-label="n=3 のときの全 8 配置が一本の道をなす図。000 から 100 まで 7 本の辺で結ばれ、各辺には動く箱の番号が付く。">
+      <defs>
+        <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="IBM Plex Mono, monospace" font-size="14" text-anchor="middle">
+        <!-- nodes -->
+        <g fill="none" stroke="currentColor" stroke-width="1.2">
+          <rect x="18"  y="46" width="66" height="32" rx="4"/>
+          <rect x="114" y="46" width="66" height="32" rx="4"/>
+          <rect x="210" y="46" width="66" height="32" rx="4"/>
+          <rect x="306" y="46" width="66" height="32" rx="4"/>
+          <rect x="402" y="46" width="66" height="32" rx="4"/>
+          <rect x="498" y="46" width="66" height="32" rx="4"/>
+          <rect x="594" y="46" width="66" height="32" rx="4"/>
+        </g>
+        <rect x="690" y="46" width="66" height="32" rx="4" fill="none" style="stroke:var(--accent)" stroke-width="2"/>
+        <g fill="currentColor">
+          <text x="51"  y="67">000</text><text x="147" y="67">001</text>
+          <text x="243" y="67">011</text><text x="339" y="67">010</text>
+          <text x="435" y="67">110</text><text x="531" y="67">111</text>
+          <text x="627" y="67">101</text><text x="723" y="67">100</text>
+        </g>
+        <!-- edges -->
+        <g stroke="currentColor" stroke-width="1.2">
+          <line x1="84"  y1="62" x2="112" y2="62" marker-end="url(#arr)"/>
+          <line x1="180" y1="62" x2="208" y2="62" marker-end="url(#arr)"/>
+          <line x1="276" y1="62" x2="304" y2="62" marker-end="url(#arr)"/>
+          <line x1="372" y1="62" x2="400" y2="62" marker-end="url(#arr)"/>
+          <line x1="468" y1="62" x2="496" y2="62" marker-end="url(#arr)"/>
+          <line x1="564" y1="62" x2="592" y2="62" marker-end="url(#arr)"/>
+          <line x1="660" y1="62" x2="688" y2="62" marker-end="url(#arr)"/>
+        </g>
+        <g font-size="11" fill="currentColor" opacity=".75">
+          <text x="99"  y="50">箱0</text><text x="195" y="50">箱1</text>
+          <text x="291" y="50">箱0</text><text x="387" y="50">箱2</text>
+          <text x="483" y="50">箱0</text><text x="579" y="50">箱1</text>
+          <text x="675" y="50">箱0</text>
+        </g>
+        <g font-size="11" font-family="Zen Kaku Gothic New, sans-serif">
+          <text x="51" y="102" fill="currentColor">スタート</text>
+          <text x="723" y="102" style="fill:var(--accent)" font-weight="700">ゴール</text>
+        </g>
+      </g>
+    </svg>
+    </div>
+    <figcaption><span class="mono">n = 3</span> の全 8 配置(表示は 箱2 箱1 箱0 の順)。どの中間配置にも第 3 の出口がないため、端から端まで 2<sup>3</sup> − 1 = 7 手が下界になる。上のデモの進捗バーは、この道を横一列に引き延ばしたものだ。</figcaption>
+  </figure>
+</section>
+
+<section id="gadget">
+  <p class="eyebrow">倉庫番への埋め込み</p>
+  <h2>扉の正体は、下位の箱そのもの</h2>
+  <p>「箱 <span class="mono">k−1</span> が 1、それ未満が全部 0 のときだけ動かせる」という規則は、魔法ではなく<b>幾何</b>で実現する。箱 <span class="mono">k</span> の押し位置へ向かう通路が、下位の箱の溝と交差するように壁を組めばよい。箱が特定の側にあるとき、その箱自身が通路のマスを塞ぐ——箱が扉を兼ねる。</p>
+  <figure>
+    <div class="fig-scroll">
+    <svg viewBox="0 0 780 252" role="img" aria-label="箱2への通路の模式図。押し手からの通路が箱0の扉と箱1の扉を通過し、両方が開いた状態でのみ箱2の後ろの押し位置に届く。">
+      <defs>
+        <marker id="arrG" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" style="fill:var(--accent)"/>
+        </marker>
+      </defs>
+      <g font-family="Zen Kaku Gothic New, sans-serif" font-size="11.5">
+        <!-- corridor cells -->
+        <g fill="none" stroke="currentColor" stroke-width="1.2">
+          <rect x="30"  y="58" width="44" height="44" rx="2"/>
+          <rect x="78"  y="58" width="44" height="44" rx="2"/>
+          <rect x="174" y="58" width="44" height="44" rx="2"/>
+          <rect x="270" y="58" width="44" height="44" rx="2"/>
+          <rect x="318" y="58" width="44" height="44" rx="2"/>
+          <rect x="414" y="58" width="44" height="44" rx="2"/>
+        </g>
+        <!-- gate cells (dashed) -->
+        <g fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-dasharray="5 4">
+          <rect x="126" y="58" width="44" height="44" rx="2"/>
+          <rect x="222" y="58" width="44" height="44" rx="2"/>
+        </g>
+        <!-- crate 2 slot -->
+        <rect x="366" y="58" width="44" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/>
+        <line x1="371" y1="63" x2="405" y2="97" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="405" y1="63" x2="371" y2="97" stroke="currentColor" stroke-width="1.6"/>
+        <!-- goal diamond in last cell -->
+        <rect x="428" y="72" width="16" height="16" transform="rotate(45 436 80)" fill="none" style="stroke:var(--accent)" stroke-width="2"/>
+        <!-- player -->
+        <circle cx="52" cy="80" r="11" fill="none" stroke="currentColor" stroke-width="2"/>
+        <text x="52" y="120" text-anchor="middle" fill="currentColor">押し手</text>
+        <text x="388" y="120" text-anchor="middle" fill="currentColor">箱 2</text>
+        <text x="436" y="134" text-anchor="middle" fill="currentColor" opacity=".75">箱 2 のゴール</text>
+        <!-- green path -->
+        <polyline points="66,80 118,80" fill="none" style="stroke:var(--accent)" stroke-width="2.4" marker-end="url(#arrG)"/>
+        <polyline points="170,80 214,80" fill="none" style="stroke:var(--accent)" stroke-width="2.4" marker-end="url(#arrG)"/>
+        <polyline points="266,80 330,80" fill="none" style="stroke:var(--accent)" stroke-width="2.4" marker-end="url(#arrG)"/>
+        <text x="340" y="46" text-anchor="middle" style="fill:var(--accent)" font-weight="700">押す →</text>
+        <!-- gate labels -->
+        <text x="148" y="46" text-anchor="middle" style="fill:var(--accent)" font-weight="700">扉 A</text>
+        <text x="244" y="46" text-anchor="middle" style="fill:var(--accent)" font-weight="700">扉 B</text>
+        <!-- connectors to mini slots -->
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 3">
+          <line x1="148" y1="102" x2="148" y2="150"/>
+          <line x1="244" y1="102" x2="244" y2="150"/>
+        </g>
+        <!-- mini slot: box0 at 0 -->
+        <g>
+          <rect x="118" y="150" width="30" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="150" y="150" width="30" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="121" y="153" width="24" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="124" y1="156" x2="142" y2="174" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="142" y1="156" x2="124" y2="174" stroke="currentColor" stroke-width="1.2"/>
+          <text x="149" y="200" text-anchor="middle" fill="currentColor">箱 0 = 0 → 開</text>
+          <text x="149" y="218" text-anchor="middle" fill="currentColor" opacity=".7">(1 側に来ると扉 A のマスを塞ぐ)</text>
+        </g>
+        <!-- mini slot: box1 at 1 -->
+        <g>
+          <rect x="214" y="150" width="30" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="246" y="150" width="30" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="249" y="153" width="24" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="252" y1="156" x2="270" y2="174" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="270" y1="156" x2="252" y2="174" stroke="currentColor" stroke-width="1.2"/>
+          <text x="325" y="200" text-anchor="middle" fill="currentColor">箱 1 = 1 → 開</text>
+          <text x="325" y="218" text-anchor="middle" fill="currentColor" opacity=".7">(0 側に戻ると扉 B のマスを塞ぐ)</text>
+        </g>
+      </g>
+    </svg>
+    </div>
+    <figcaption>状態 <span class="mono">010</span>(箱 1 = 1、箱 0 = 0)の瞬間だけ、扉 A・B がともに開き、押し手は箱 2 の後ろに回り込んで押せる。グレイ符号の道でちょうど 4 手目にあたる。</figcaption>
+  </figure>
+  <p style="margin-top:20px">実際の PSPACE 完全性の証明(Culberson 1997)では、この考え方をさらに押し進める。<b>押せるが引けない</b>という倉庫番の非可逆性で一方通行の扉を作り、番人役の箱で通路の開閉を制御して、線形拘束オートマトン(LBA)の計算を一歩ずつ盤面にたどらせる。LBA は <span class="mono">n</span> セルのテープで 2<sup>Θ(n)</sup> ステップ走れるから、それを忠実に模倣させられるパズルの解も指数長になる。原理は上の機械と同じ——<b>箱の配置全体がメモリとして働き、プレイヤーの到達可能域を決める</b>。</p>
+</section>
+
+<section id="growth">
+  <p class="eyebrow">爆発のしかた</p>
+  <h2>盤面は線形に、手数は指数に</h2>
+  <p>箱を 1 個(と扉まわりの壁を定数個)足すたびに、必要手数はほぼ倍になる。1 手 1 秒で押し続けたとして:</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>箱の数 n</th><th>最短手数 2ⁿ − 1</th><th style="text-align:left; padding-left:8px">1 手 = 1 秒なら</th></tr></thead>
+      <tbody>
+        <tr><td>3</td><td>7</td><td class="time" style="text-align:left; padding-left:8px">7 秒</td></tr>
+        <tr><td>5</td><td>31</td><td class="time" style="text-align:left; padding-left:8px">31 秒</td></tr>
+        <tr><td>8</td><td>255</td><td class="time" style="text-align:left; padding-left:8px">約 4 分</td></tr>
+        <tr><td>10</td><td>1,023</td><td class="time" style="text-align:left; padding-left:8px">約 17 分</td></tr>
+        <tr><td>15</td><td>32,767</td><td class="time" style="text-align:left; padding-left:8px">約 9 時間</td></tr>
+        <tr><td>20</td><td>1,048,575</td><td class="time" style="text-align:left; padding-left:8px">約 12 日</td></tr>
+        <tr class="hot"><td>30</td><td>1,073,741,823</td><td class="time" style="text-align:left; padding-left:8px">約 34 年</td></tr>
+        <tr class="hot"><td>40</td><td>1,099,511,627,775</td><td class="time" style="text-align:left; padding-left:8px">約 3.5 万年</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="theory">
+  <p class="eyebrow">理論</p>
+  <h2>なぜ「指数長の解」が存在しうるのか</h2>
+  <p>もし可解な盤面すべてに多項式長の解があるなら、解そのものが多項式サイズの証拠になるので倉庫番は NP に入る。しかし倉庫番は PSPACE 完全なので、NP = PSPACE でない限りそれはありえない。さらに、このページの構成のような具体的な盤面族に対しては、仮定なしで直接「どの解も指数長」を証明できる——配置空間が長さ 2<sup>n</sup> − 1 の道であることを見ればよい。</p>
+  <p>「到達可能な配置空間の直径が盤面サイズの指数になる」というこの現象は、Rush Hour やスライディングブロックパズルなど、PSPACE 完全な動かすパズルに共通して現れる。</p>
+  <ul class="refs">
+    <li><span class="who">J. Culberson</span> — “Sokoban is PSPACE-complete” (1997)。LBA の計算のシミュレーションによる元祖の証明。指数長の解が必要な族はこの構成から従う。</li>
+    <li><span class="who">R. A. Hearn &amp; E. D. Demaine</span> — “PSPACE-completeness of sliding-block puzzles and other problems through the nondeterministic constraint logic model of computation”, <i>Theoretical Computer Science</i> 343 (2005)。NCL 枠組みによる統一的な別証明。</li>
+    <li><span class="who">チャイニーズリング(九連環)</span> — このページの機械と同型の規則を持つ古典パズル。解列はグレイ符号、手数は Θ(2<sup>n</sup>)。</li>
+  </ul>
+  <p class="note" style="margin-top:18px">注:上のデモは規則を抽象化した「機械」であり、これを本物の倉庫番の壁と箱だけで厳密に組むには、一方通行扉や番人箱などもう少し込み入ったガジェットが要る。また抽象機械の 1 手は実盤面では複数回の押し+移動になるが、その換算は多項式なので指数性は保たれる。</p>
+</section>
+
+<footer>指数手数の倉庫番 — 二進カウンタ(グレイ符号)型ガジェットのインタラクティブ解説。</footer>
+
+</div>
+
+<script>
+(function () {
+  var S = { n: 4, bits: [], moves: 0, toggles: [], timer: null };
+  var rowsEl = document.getElementById('rows');
+  var nSeg = document.getElementById('nSeg');
+  var btnStep = document.getElementById('btnStep');
+  var btnAuto = document.getElementById('btnAuto');
+  var btnReset = document.getElementById('btnReset');
+  var speedEl = document.getElementById('speed');
+  var stMoves = document.getElementById('stMoves');
+  var stRank = document.getElementById('stRank');
+  var stTotal = document.getElementById('stTotal');
+  var stLoss = document.getElementById('stLoss');
+  var fill = document.getElementById('fill');
+  var track = document.getElementById('track');
+  var banner = document.getElementById('banner');
+  var rowEls = [];
+
+  function total() { return (1 << S.n) - 1; }
+  function gray(r) { return r ^ (r >> 1); }
+  function rank() {
+    var g = 0, i, b = 0;
+    for (i = 0; i < S.n; i++) g |= S.bits[i] << i;
+    for (; g; g >>= 1) b ^= g;
+    return b;
+  }
+  function legal(k) {
+    if (k === 0) return true;
+    if (S.bits[k - 1] !== 1) return false;
+    for (var j = 0; j < k - 1; j++) if (S.bits[j]) return false;
+    return true;
+  }
+  function whyLocked(k) {
+    if (S.bits[k - 1] !== 1) return '箱 ' + (k - 1) + ' が 1 側にないため、扉が閉じている';
+    for (var j = 0; j < k - 1; j++) if (S.bits[j]) return '箱 ' + j + ' が 1 側にあり、通路を塞いでいる';
+    return '';
+  }
+  function nextBit() {
+    var r = rank();
+    if (r >= total()) return -1;
+    var d = gray(r) ^ gray(r + 1);
+    var k = 0;
+    while (!((d >> k) & 1)) k++;
+    return k;
+  }
+
+  function build() {
+    rowsEl.innerHTML = '';
+    rowEls = [];
+    for (var k = S.n - 1; k >= 0; k--) {
+      (function (k) {
+        var row = document.createElement('div');
+        row.className = 'bitrow';
+        var goalPos = (k === S.n - 1) ? 1 : 0;
+        var cond = k === 0 ? 'いつでも動かせる'
+          : k === 1 ? '条件:箱 0 が 1'
+          : '条件:箱 ' + (k - 1) + ' が 1、箱 0〜' + (k - 2) + ' が 0';
+        var planned = 1 << (S.n - 1 - k);
+        row.innerHTML =
+          '<div class="name">箱 ' + k + (k === S.n - 1 ? '<small>最上位</small>' : '') + '</div>' +
+          '<button class="slot" type="button">' +
+            '<div class="cell' + (goalPos === 0 ? ' goal' : '') + '"><span class="pos-label">0</span></div>' +
+            '<div class="cell' + (goalPos === 1 ? ' goal' : '') + '"><span class="pos-label">1</span></div>' +
+            '<div class="crate"></div>' +
+          '</button>' +
+          '<div class="meta"><span class="chip"></span><span class="cond">' + cond + '</span><span class="why"></span></div>' +
+          '<div class="count"><b>0</b> 回<br>全行程では ' + planned.toLocaleString('ja-JP') + ' 回</div>';
+        var slot = row.querySelector('.slot');
+        slot.addEventListener('click', function () { tryToggle(k); });
+        rowsEl.appendChild(row);
+        rowEls[k] = row;
+      })(k);
+    }
+    var i;
+    track.querySelectorAll('.tick').forEach(function (t) { t.remove(); });
+    for (i = 0; i < S.n; i++) {
+      var tick = document.createElement('div');
+      tick.className = 'tick';
+      tick.style.left = ((1 << i) / total() * 100) + '%';
+      tick.title = '2^' + i + ' = ' + (1 << i).toLocaleString('ja-JP') + ' 手目:箱 ' + i + ' が初めて動く';
+      track.appendChild(tick);
+    }
+    stTotal.textContent = total().toLocaleString('ja-JP');
+  }
+
+  function update() {
+    var r = rank(), N = total();
+    for (var k = 0; k < S.n; k++) {
+      var row = rowEls[k];
+      var crate = row.querySelector('.crate');
+      var chip = row.querySelector('.chip');
+      var slot = row.querySelector('.slot');
+      crate.style.setProperty('--pos', S.bits[k]);
+      var goalPos = (k === S.n - 1) ? 1 : 0;
+      crate.classList.toggle('on-goal', S.bits[k] === goalPos);
+      var ok = legal(k);
+      chip.textContent = ok ? '動かせる' : 'ロック中';
+      chip.className = 'chip ' + (ok ? 'free' : 'locked');
+      slot.style.cursor = ok ? 'pointer' : 'not-allowed';
+      slot.setAttribute('aria-label', '箱 ' + k + ':現在 ' + S.bits[k] + ' 側、' + (ok ? '動かせます' : 'ロック中'));
+      row.querySelector('.count b').textContent = S.toggles[k].toLocaleString('ja-JP');
+    }
+    stMoves.textContent = S.moves.toLocaleString('ja-JP');
+    stRank.textContent = r.toLocaleString('ja-JP');
+    stLoss.textContent = (S.moves - r).toLocaleString('ja-JP');
+    fill.style.width = (r / N * 100) + '%';
+    var done = (r === N);
+    btnStep.disabled = done;
+    if (done) {
+      stopAuto();
+      banner.textContent = S.moves === N
+        ? 'クリア — ' + N.toLocaleString('ja-JP') + ' 手。これが最短(かつ唯一)の道のり。'
+        : 'クリア — ' + S.moves.toLocaleString('ja-JP') + ' 手(最短は ' + N.toLocaleString('ja-JP') + ' 手)。';
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  function tryToggle(k) {
+    var row = rowEls[k];
+    var why = row.querySelector('.why');
+    if (!legal(k)) {
+      why.textContent = whyLocked(k);
+      row.classList.remove('shake');
+      void row.offsetWidth;
+      row.classList.add('shake');
+      setTimeout(function () { why.textContent = ''; }, 2200);
+      return false;
+    }
+    why.textContent = '';
+    S.bits[k] ^= 1;
+    S.moves++;
+    S.toggles[k]++;
+    update();
+    return true;
+  }
+
+  function step() {
+    var k = nextBit();
+    if (k >= 0) tryToggle(k);
+  }
+  function interval() { return 400 - speedEl.value * 3.8; }
+  function startAuto() {
+    if (S.timer || rank() >= total()) return;
+    btnAuto.textContent = '停止';
+    S.timer = setInterval(step, interval());
+  }
+  function stopAuto() {
+    if (S.timer) clearInterval(S.timer);
+    S.timer = null;
+    btnAuto.textContent = '自動再生';
+  }
+  function reset() {
+    stopAuto();
+    S.bits = [];
+    S.toggles = [];
+    for (var i = 0; i < S.n; i++) { S.bits.push(0); S.toggles.push(0); }
+    S.moves = 0;
+    build();
+    update();
+  }
+  function setN(n) {
+    S.n = n;
+    nSeg.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(+b.textContent === n));
+    });
+    reset();
+  }
+
+  for (var n = 3; n <= 10; n++) {
+    (function (n) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = n;
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () { setN(n); });
+      nSeg.appendChild(b);
+    })(n);
+  }
+
+  btnStep.addEventListener('click', function () { stopAuto(); step(); });
+  btnAuto.addEventListener('click', function () { S.timer ? stopAuto() : startAuto(); });
+  btnReset.addEventListener('click', reset);
+  speedEl.addEventListener('input', function () {
+    if (S.timer) { clearInterval(S.timer); S.timer = setInterval(step, interval()); }
+  });
+
+  setN(4);
+})();
+</script>
+</body>
+</html>

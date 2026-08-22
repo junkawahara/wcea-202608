@@ -12,11 +12,14 @@
   ふつうの虫食い算のドリル。
 - **[IQ Flow ドリル](https://junkawahara.github.io/wcea-202608/iqflow/iqflow.html)** —
   SmartGames「IQ Flow」(Raf Peeters 作、2026)の練習ページ。ピースを盤の縁のみぞから波の向きにスライドさせて 5×5 グリッドを埋める。
+- **[指数手数の倉庫番](https://junkawahara.github.io/wcea-202608/sokoban/)** —
+  倉庫番の最短手数が盤面サイズの指数になる仕組み(二進カウンタ/グレイ符号型ガジェット)を、触って確かめるインタラクティブ解説。
 
 ## リポジトリ構成
 
 - `index.html` — トップページ(上のページへのリンク集)
 - `mushikuizan/` — 虫食い算ドリル
 - `iqflow/` — IQ Flow のドリルと Node.js 製ソルバー(詳細は [iqflow/README.md](iqflow/README.md))
+- `sokoban/` — 指数手数の倉庫番のインタラクティブ解説
 
 `main` ブランチに push すると GitHub Actions が自動で GitHub Pages にデプロイします。
