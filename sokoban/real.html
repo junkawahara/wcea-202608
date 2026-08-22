@@ -105,7 +105,7 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
   <h1>本物の倉庫番で 2<sup>N</sup> 手</h1>
   <p class="thesis">壁・箱・ゴール・プレイヤーだけの、正真正銘の倉庫番。部屋を N 個つないだ盤面の最短手数は
   <strong>ちょうど 16·2<sup>N</sup> − 15 押し</strong>(N=1,2 は押し最適全数探索で厳密検証。
-  N=3,4 は構成どおりの解 113手・241手を機械検証して収録)。
+  N=3〜5 は構成どおりの解 113・241・497手を機械検証して収録)。
   下の盤面は実際に遊べる。矢印キーで動き、解の自動再生も見られる。</p>
 </header>
 
@@ -141,7 +141,7 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
   <h2>部屋をひとつ足すと、手数はほぼ倍になる</h2>
   <p>N=1,2 の最短押し手数は、押し最適の全数探索ソルバー(到達可能な盤面状態をすべて列挙)で確定した。
   N=3 になると状態数が約1,670万件の上限を超えて全数探索は打ち切りになる——盤面が指数的に手ごわくなることの傍証でもある。
-  そこで N=3,4 は、<b>検証済みの N=2 最短解から部屋ごとの操作(セット11押し/クリア5押し)をテンプレートとして抽出し、
+  そこで N=3 以上は、<b>検証済みの N=2 最短解から部屋ごとの操作(セット11押し/クリア5押し)をテンプレートとして抽出し、
   部屋の周期ぶん平行移動して合成した「構成どおりの解」</b>を収録した。この合成法を N=2 に適用すると
   全数探索が見つけた最短解を一字一句再現する。合成解も独立のリプレイ器で1手ずつ機械検証済みで、
   値 16·2<sup>N</sup>−15 は N≥3 では上界として確定・最短と予想される。</p>
@@ -153,6 +153,7 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
         <tr><td>2</td><td>49</td><td>49</td><td>486</td><td class="l"><span class="badge">全数探索+リプレイ ✓</span></td></tr>
         <tr><td>3</td><td>≤ 113</td><td>113</td><td>1,147</td><td class="l"><span class="badge">構成解+リプレイ ✓</span></td></tr>
         <tr><td>4</td><td>≤ 241</td><td>241</td><td>2,480</td><td class="l"><span class="badge">構成解+リプレイ ✓</span></td></tr>
+        <tr><td>5</td><td>≤ 497</td><td>497</td><td>5,157</td><td class="l"><span class="badge">構成解+リプレイ ✓</span></td></tr>
         <tr><td>10</td><td>—</td><td>16,369</td><td>—</td><td class="l">式による外挿</td></tr>
         <tr><td>20</td><td>—</td><td>16,777,201</td><td>—</td><td class="l">式による外挿</td></tr>
       </tbody>
@@ -201,7 +202,7 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
   論文が部屋に一方通行と曲がり通路を追加して証明を付け直した理由がよく分かる。</p>
   <p class="note">検証の内訳:N=1,2 は(1)押し最適 BFS(死にマス・凍結・角詰みなどの健全な枝刈りつき)で最短値を確定し、
   (2)得られた解を独立のリプレイ器で1手ずつ検証した。途中で使った双方向探索器は小盤面のクロスチェックで不健全と判明したため破棄し、
-  すべて順方向探索で取り直している。N=3,4 の解は N=2 最短解から部屋テンプレート(セット11押し/クリア5押し)を抽出して合成したもので、
+  すべて順方向探索で取り直している。N=3〜5 の解は N=2 最短解から部屋テンプレート(セット11押し/クリア5押し)を抽出して合成したもので、
   同じリプレイ器で検証済み(この合成は N=2 では全数探索の最短解を一字一句再現する)。最短性の証明は N≥3 では未達で、16·2<sup>N</sup>−15 は上界。</p>
   <ul class="refs">
     <li><span class="who">E. Friedman</span> — Math Magic “Problem of the Month” (March 2000)。Hoffman の部屋と L(n) ≥ 2<sup>n/74</sup> の記事。</li>
@@ -303,6 +304,27 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
     '####################################################'
   ];
   var SOL4 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
+  var LV5 = [
+    '###############################################################',
+    '###########   ########   ########   ########   ########   #####',
+    '#####   ## *  ##   ## *  ##   ## *  ##   ## *  ##   ## *  #####',
+    '#### *  ## # ## *  ## # ## *  ## # ## *  ## # ## *  ## # ######',
+    '#@   # ### #    # ### #    # ### #    # ### #    # ### #    $.#',
+    '# ## # * *  ### # * *  ### # * *  ### # * *  ### # * *  #######',
+    '# ##  #   # ###  #   # ###  #   # ###  #   # ###  #   # #######',
+    '# ### #     #### #     #### #     #### #     #### #     #######',
+    '# ## *#### #  # *#### #  # *#### #  # *#### #  # *#### #  #####',
+    '# ##    ##  * #    ##  * #    ##  * #    ##  * #    ##  * #####',
+    '# ##  #   ##  #  #   ##  #  #   ##  #  #   ##  #  #   ##  #####',
+    '# ####  # ##* ###  # ##* ###  # ##* ###  # ##* ###  # ##* #####',
+    '# ### *##     ## *##     ## *##     ## *##     ## *##     #####',
+    '# ###    ###  ##    ###  ##    ###  ##    ###  ##    ###  #####',
+    '# ###  # #######  # #######  # #######  # #######  # ##########',
+    '# ###### ########## ########## ########## ########## ##########',
+    '#                                                    ##########',
+    '###############################################################'
+  ];
+  var SOL5 = 'rrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllllllllllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddlllllllllllllllllluuuuuuuuuuuurrruRldddrdDlddrUrrdrrddrrrruulDuruulDlluuruuluuuRldddrddlluluRddrddrrrddlUdrddlUllluulldlDlddrUrrdddllllllluuuuuuuuuuuurrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrururrdLddRdrruLddrrruuLuuururrdLddrrrR';
   var LVH = [
     '#########  #########',
     '#.$     #  #      @#',
@@ -328,6 +350,7 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
     { name: 'N = 2(最短49手)', grid: LV2, sol: SOL2, opt: 49, exact: true },
     { name: 'N = 3(113手・構成解)', grid: LV3, sol: SOL3, opt: 113, exact: false },
     { name: 'N = 4(241手・構成解)', grid: LV4, sol: SOL4, opt: 241, exact: false },
+    { name: 'N = 5(497手・構成解)', grid: LV5, sol: SOL5, opt: 497, exact: false },
     { name: 'おまけ:掲載版の部屋(7手で穴)', grid: LVH, sol: SOLH, opt: 7, exact: true }
   ];
 
@@ -500,17 +523,21 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
     });
     refresh();
   }
-  var speed = 1, SPEEDS = [1, 2, 4, 8];
+  var speed = 1, SPEEDS = [1, 2, 4, 8, 16];
   function stopAuto() {
     if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
     document.getElementById('btnSolve').textContent = LEVELS[cur].exact ? '最短解を再生' : '構成解を再生';
   }
   function startTicker() {
     var sol = LEVELS[cur].sol;
+    // beyond ×8 the timer can't tick faster, so advance several moves per tick
+    var per = Math.max(1, Math.round(speed / 8));
     autoTimer = setInterval(function () {
-      if (autoPos >= sol.length) { stopAuto(); return; }
-      tryMove(state, sol[autoPos].toLowerCase());
-      autoPos++;
+      for (var i = 0; i < per; i++) {
+        if (autoPos >= sol.length) { stopAuto(); break; }
+        tryMove(state, sol[autoPos].toLowerCase());
+        autoPos++;
+      }
       refresh();
     }, Math.max(11, Math.round(90 / speed)));
   }
@@ -518,7 +545,10 @@ footer { margin-top: 72px; font-size: 12.5px; color: var(--muted); border-top: 1
     load(cur);
     autoPos = 0;
     // long replays (N>=3) default to fast-forward so the doubling is watchable
-    if (LEVELS[cur].sol.length > 600 && speed === 1) setSpeed(4);
+    if (speed === 1) {
+      if (LEVELS[cur].sol.length > 3000) setSpeed(8);
+      else if (LEVELS[cur].sol.length > 600) setSpeed(4);
+    }
     document.getElementById('btnSolve').textContent = '停止';
     startTicker();
   }
